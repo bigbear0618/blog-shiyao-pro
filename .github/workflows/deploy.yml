@@ -41,8 +41,11 @@ jobs:
             echo "HEAD: $(git rev-parse --short HEAD) — $(git log -1 --pretty=%s)"
             echo "::endgroup::"
 
-            echo "::group::Sync *.html to webroot (preserves files in webroot not in repo)"
-            sudo rsync -av \
+            echo "::group::Sync *.html to webroot (strict mirror, excludes dotfiles/dirs and backups)"
+            sudo rsync -av --delete --prune-empty-dirs \
+              --exclude='.*' \
+              --exclude='*.bak' --exclude='*.bak.*' \
+              --exclude='nginx/' --exclude='scripts/' \
               --include='*.html' \
               --include='*/' \
               --exclude='*' \
