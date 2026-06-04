@@ -1,0 +1,64 @@
+name: Deploy to blog.shiyao.pro
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.html'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-blog
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Sync HTML to nginx webroot
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: SSH into ECS and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          command_timeout: 3m
+          script_stop: true
+          script: |
+            set -euo pipefail
+
+            REPO=~/projects/blog-shiyao-pro
+            WEBROOT=/var/www/blog.shiyao.pro
+
+            echo "::group::Pull latest from origin/main"
+            cd "$REPO"
+            git fetch --quiet origin main
+            git reset --hard origin/main
+            echo "HEAD: $(git rev-parse --short HEAD) — $(git log -1 --pretty=%s)"
+            echo "::endgroup::"
+
+            echo "::group::Sync *.html to webroot (preserves files in webroot not in repo)"
+            sudo rsync -av \
+              --include='*.html' \
+              --include='*/' \
+              --exclude='*' \
+              --no-perms --no-owner --no-group \
+              "$REPO/" "$WEBROOT/"
+            echo "::endgroup::"
+
+            echo "::group::Normalize ownership and permissions"
+            sudo chown -R nginx:nginx "$WEBROOT"
+            sudo find "$WEBROOT" -type f -exec chmod 644 {} \;
+            sudo find "$WEBROOT" -type d -exec chmod 755 {} \;
+            echo "::endgroup::"
+
+            echo "::group::Smoke test"
+            curl -fsS -o /dev/null -w "Homepage: HTTP %{http_code}\n" https://blog.shiyao.pro/
+            curl -fsS -o /dev/null -w "Article  : HTTP %{http_code}\n" https://blog.shiyao.pro/happy-claude-247
+            echo "::endgroup::"
+
+            echo "✓ Deployed at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
