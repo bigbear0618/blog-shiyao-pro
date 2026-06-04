@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>blog.shiyao.pro · 文章列表</title>
+  <meta name="description" content="shiyao 的技术博客 — 关于云、AI 编程工作流、独立开发的随手笔记。">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #0f3a44 0%, #134e5e 50%, #2d7a5f 100%);
+      color: #f0f4f3;
+      min-height: 100vh;
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      padding: 3rem 1rem 2.5rem;
+      margin-bottom: 2rem;
+    }
+    .dot {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #fde047;
+      margin-right: 8px;
+      box-shadow: 0 0 8px #fde047;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      letter-spacing: 1px;
+      margin-bottom: 0.6rem;
+      background: linear-gradient(135deg, #fff 0%, #b6e3d0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline { font-size: 1rem; opacity: 0.75; }
+
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #b6e3d0;
+      margin: 2rem 0 1rem;
+      opacity: 0.7;
+    }
+
+    .post-list { list-style: none; }
+    .post {
+      display: block;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-left: 3px solid #71b280;
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      margin-bottom: 0.9rem;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s ease, background 0.2s ease, border-left-color 0.2s ease;
+    }
+    .post:hover {
+      background: rgba(255,255,255,0.08);
+      border-left-color: #fde047;
+      transform: translateX(4px);
+    }
+    .post-meta {
+      font-size: 0.78rem;
+      color: #b6e3d0;
+      opacity: 0.7;
+      margin-bottom: 0.3rem;
+      letter-spacing: 0.5px;
+    }
+    .post-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .post-summary {
+      font-size: 0.9rem;
+      opacity: 0.78;
+      line-height: 1.5;
+    }
+    .tag {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      background: rgba(253,224,71,0.12);
+      color: #fde047;
+      border: 1px solid rgba(253,224,71,0.25);
+      border-radius: 999px;
+      font-size: 0.7rem;
+      margin-left: 0.4rem;
+      letter-spacing: 0.3px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 2rem;
+      opacity: 0.5;
+      font-style: italic;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.85rem;
+      opacity: 0.55;
+    }
+    footer a { color: #fde047; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>blog.shiyao.pro</h1>
+      <p class="tagline"><span class="dot"></span>云、AI 编程工作流与独立开发的随手笔记</p>
+    </header>
+
+    <div class="section-title">最新文章</div>
+
+    <ul class="post-list">
+
+      <li>
+        <a class="post" href="/happy-claude-247">
+          <div class="post-meta">2026-06-04 · DevOps</div>
+          <div class="post-title">Happy + Claude Code：让 AI 编程助手 7×24 在线<span class="tag">DevOps</span></div>
+          <div class="post-summary">用 Happy 客户端远程连接部署在云服务器上的 Claude Code，实现随时随地、永不掉线的 AI 编程工作流。</div>
+        </a>
+      </li>
+
+      <!-- 新增文章时,复制上面一整段 <li>...</li>,改链接、日期、标题、摘要即可 -->
+    </ul>
+
+    <footer>
+      <p>© 2026 shiyao · 由 Claude Code 协助撰写 · <a href="https://shiyao.pro">主站</a></p>
+    </footer>
+
+  </div>
+</body>
+</html>

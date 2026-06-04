@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy + Claude Code：让 AI 编程助手 7×24 在线 — blog.shiyao.pro</title>
+  <meta name="description" content="用 Happy 客户端远程连接部署在云服务器上的 Claude Code，实现随时随地、永不掉线的 AI 编程工作流。">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #0f3a44 0%, #134e5e 50%, #2d7a5f 100%);
+      color: #f0f4f3;
+      min-height: 100vh;
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      margin-bottom: 3rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: rgba(253, 224, 71, 0.15);
+      color: #fde047;
+      border: 1px solid rgba(253, 224, 71, 0.3);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      letter-spacing: 0.5px;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #fff 0%, #b6e3d0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle { font-size: 1.05rem; opacity: 0.85; max-width: 640px; margin: 0 auto; }
+    .meta { margin-top: 1.2rem; font-size: 0.85rem; opacity: 0.6; }
+
+    h2 {
+      font-size: 1.5rem;
+      margin: 2.5rem 0 1rem;
+      padding-left: 0.8rem;
+      border-left: 3px solid #71b280;
+      letter-spacing: 0.5px;
+    }
+    h3 { font-size: 1.15rem; margin: 1.5rem 0 0.6rem; color: #b6e3d0; }
+    p { margin-bottom: 1rem; opacity: 0.92; }
+    a { color: #fde047; text-decoration: none; border-bottom: 1px dotted rgba(253,224,71,0.4); }
+    a:hover { border-bottom-style: solid; }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.2rem 0;
+      backdrop-filter: blur(4px);
+    }
+    .card.highlight { border-color: rgba(253,224,71,0.35); background: rgba(253,224,71,0.05); }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+    th, td { padding: 0.7rem 0.9rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    th { color: #b6e3d0; font-weight: 600; }
+    td code { background: rgba(0,0,0,0.25); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.88em; }
+
+    pre {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+    code { font-family: "JetBrains Mono", "Fira Code", Consolas, Monaco, monospace; }
+    pre code { color: #e8f5ed; }
+
+    ul, ol { padding-left: 1.4rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.4rem; opacity: 0.92; }
+    li::marker { color: #fde047; }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+      padding: 1.2rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+    }
+    .flow-item {
+      flex: 1;
+      min-width: 110px;
+      text-align: center;
+      padding: 0.8rem 0.5rem;
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .flow-item .emoji { font-size: 1.6rem; display: block; margin-bottom: 0.3rem; }
+    .flow-arrow { color: #71b280; font-size: 1.3rem; }
+    @media (max-width: 600px) {
+      .flow { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .feature {
+      padding: 1.2rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      border-left: 3px solid #71b280;
+    }
+    .feature h4 { color: #fde047; margin-bottom: 0.4rem; font-size: 1.02rem; }
+    .feature p { font-size: 0.9rem; margin: 0; opacity: 0.85; }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.85rem;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <span class="badge">DEVOPS · 工作流</span>
+      <h1>Happy + Claude Code<br>让 AI 编程助手 7×24 在线</h1>
+      <p class="subtitle">手机随手一开就能继续昨天的重构 — 把 Claude Code 部署到云服务器上，用 Happy 客户端远程接入，编程不再被设备绑死。</p>
+      <p class="meta">2026-06-04 · shiyao</p>
+    </header>
+
+    <h2>📌 想解决什么问题</h2>
+    <p>
+      把 Claude Code 装在本地很方便，但有几个明显的限制：电脑合盖任务就停了；通勤路上灵感来了只能记笔记；
+      跨设备切换得重新拉仓库、配环境；长时间跑的任务（比如批量代码迁移、跑测试）必须开着机器守着。
+    </p>
+    <p>
+      解决方案出乎意料地简单 — <strong>把 Claude Code 装在一台始终在线的云服务器上，本地（电脑/手机）只装一个 Happy 客户端去远程连</strong>。
+      服务器永不下线，客户端只是一个"窗口"，关了再开任务还在跑。
+    </p>
+
+    <h2>🔁 工作流一图看懂</h2>
+    <div class="flow">
+      <div class="flow-item"><span class="emoji">📱</span>手机 / iPad<br><small style="opacity:0.7">Happy 客户端</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">💻</span>笔记本<br><small style="opacity:0.7">Happy 客户端</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">☁️</span>云服务器<br><small style="opacity:0.7">Claude Code 常驻</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">🤖</span>Anthropic API<br><small style="opacity:0.7">Claude Opus/Sonnet</small></div>
+    </div>
+    <p>
+      任意客户端都连接到同一台服务器上的 Claude 会话 — 也就是说在地铁上用手机发一句"把刚才那个 bug 修完"，
+      到家开电脑可以直接看到执行结果和后续对话。<strong>会话状态不属于设备，属于服务器。</strong>
+    </p>
+
+    <h2>🖥 当前服务器配置（这台正在跑的）</h2>
+    <div class="card">
+      <table>
+        <tr><th>项目</th><th>值</th></tr>
+        <tr><td>云厂商</td><td>阿里云 ECS（美国弗吉尼亚节点）</td></tr>
+        <tr><td>操作系统</td><td><code>Alibaba Cloud Linux 4</code></td></tr>
+        <tr><td>内存</td><td>1.6 GB（对 Claude Code 已经够用）</td></tr>
+        <tr><td>Shell</td><td><code>zsh + oh-my-zsh</code></td></tr>
+        <tr><td>Node.js</td><td><code>v22.22.0</code>（via NVM）</td></tr>
+        <tr><td>npm</td><td><code>10.9.4</code></td></tr>
+        <tr><td>Claude Code</td><td><code>@anthropic-ai/claude-code v2.1.158</code></td></tr>
+        <tr><td>Web 服务</td><td>nginx 提供 <code>shiyao.pro</code> 与 <code>blog.shiyao.pro</code> 静态站</td></tr>
+        <tr><td>地理位置</td><td>美国 VA，海外节点直连 Anthropic API 无需任何代理</td></tr>
+      </table>
+    </div>
+
+    <p>
+      选海外节点不是为了"翻墙"那么粗糙的需求 — 而是因为 Claude API 的端点在海外，海外 ECS 到 API 的延迟稳定在
+      <strong>个位数毫秒到几十毫秒之间</strong>，国内机器去访问反而要绕一圈，体验差好几个量级。
+    </p>
+
+    <h2>⚡ 这个组合为什么好</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <h4>7×24 不掉线</h4>
+        <p>云服务器永远在线，关上电脑任务继续跑。长时间的重构、批量改动都不用守着。</p>
+      </div>
+      <div class="feature">
+        <h4>跨设备无缝</h4>
+        <p>手机、平板、笔记本都是同一个 Claude 会话的"窗口"，切换设备无需重新对齐上下文。</p>
+      </div>
+      <div class="feature">
+        <h4>地铁也能开发</h4>
+        <p>移动端的 Happy 把 Terminal、Claude 对话浓缩成手机能用的界面 — 通勤时也能改 PR。</p>
+      </div>
+      <div class="feature">
+        <h4>统一环境</h4>
+        <p>编辑器、依赖、工具链都装在服务器上一份，永远不会出现"我本机能跑你不行"。</p>
+      </div>
+      <div class="feature">
+        <h4>低延迟出网</h4>
+        <p>海外 ECS 直连 Anthropic API，省去代理 / 中转，请求-响应更顺。</p>
+      </div>
+      <div class="feature">
+        <h4>成本可控</h4>
+        <p>一台 2 核 1.8GB 的 ECS 月成本几十块，跑 Claude Code 完全够用，远比买顶配本子划算。</p>
+      </div>
+    </div>
+
+    <h2>🚀 30 分钟搭起来</h2>
+
+    <h3>1. 准备一台海外 ECS</h3>
+    <p>1 核 1G 起步（实测 1.6G 内存跑 Node 22 + Claude Code 很从容）。系统建议 Alinux 4 / Ubuntu 22+ / Debian 12。</p>
+
+    <h3>2. 装 Node + Claude Code</h3>
+<pre><code># 装 NVM（Node 版本管理）
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.zshrc
+
+# 装 Node 22 LTS
+nvm install 22
+nvm use 22
+
+# 装 Claude Code
+npm install -g @anthropic-ai/claude-code
+
+# 装 Happy 服务端（用于客户端远程接入）
+npm install -g happy-coder</code></pre>
+
+    <h3>3. 登录 Claude / 配置 API Key</h3>
+<pre><code>claude        # 首次跑会引导登录或粘贴 API Key
+# 完成后可以加个别名,免去重复输入授权参数
+echo 'alias ccdp="claude --dangerously-skip-permissions"' &gt;&gt; ~/.zshrc</code></pre>
+
+    <h3>4. 启动 Happy 接受远程连接</h3>
+    <p>在服务器上跑 <code>happy</code>，它会生成一个一次性配对码或二维码。手机 / 本地 Happy 客户端扫码后即可远程连入这台服务器，所有命令都在云端执行。</p>
+
+    <div class="card highlight">
+      <strong>💡 Tips</strong>
+      <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+        <li>给账号开 <code>NOPASSWD sudo</code> 后，Claude Code 在自动化任务里就不会卡在密码提示上。</li>
+        <li>用 <code>tmux</code> 或 <code>systemd</code> 守住 Happy 进程，断网重连不丢会话。</li>
+        <li>把项目目录放在 <code>~/projects/</code>，Claude 的索引/缓存集中在一处更好备份。</li>
+      </ul>
+    </div>
+
+    <h2>📡 从子域名到 HTML — 这篇文章是怎么"出"来的</h2>
+    <p>
+      说到这,你可能注意到一件事 — <strong>这篇文章本身就是这个组合写出来的</strong>。
+      Claude 在云端跑着，生成 HTML，落到 nginx web 根目录，DNS 解析一过，
+      <code>https://blog.shiyao.pro/happy-claude-247</code> 立刻能访问。整条链路只有几个节点，但配齐之后体验非常顺。
+    </p>
+
+    <h3>整条链路一图看完</h3>
+    <div class="flow">
+      <div class="flow-item"><span class="emoji">🌐</span>DNS<br><small style="opacity:0.7">A 记录指向 ECS</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">🔒</span>TLS<br><small style="opacity:0.7">阿里云免费证书</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">⚙️</span>Nginx<br><small style="opacity:0.7">静态站点根目录</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">📄</span>HTML 文件<br><small style="opacity:0.7">/var/www/...</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">👀</span>读者浏览器</div>
+    </div>
+
+    <h3>每个节点是怎么配的</h3>
+    <div class="card">
+      <table>
+        <tr><th>节点</th><th>实际配置</th></tr>
+        <tr>
+          <td>DNS</td>
+          <td><code>blog.shiyao.pro</code> A 记录 → ECS 公网 IP（域名注册商控制台一次性配好）</td>
+        </tr>
+        <tr>
+          <td>TLS</td>
+          <td>阿里云控制台签发免费证书（1 年期），下载 <code>.pem</code> / <code>.key</code> 放进 <code>/etc/nginx/ssl/</code>。到期前手动续签替换。</td>
+        </tr>
+        <tr>
+          <td>Nginx</td>
+          <td>
+            <code>/etc/nginx/conf.d/blog.shiyao.pro.conf</code><br>
+            关键三行: <code>root /var/www/blog.shiyao.pro;</code> · <code>try_files $uri $uri.html $uri/ =404;</code> · gzip + 缓存头
+          </td>
+        </tr>
+        <tr>
+          <td>HTML</td>
+          <td>web 根目录 <code>/var/www/blog.shiyao.pro/</code>，所有者 <code>nginx:nginx</code>，文件 644</td>
+        </tr>
+        <tr>
+          <td>URL 路由</td>
+          <td>得益于 <code>try_files $uri $uri.html</code>，<code>/foo.html</code> 和 <code>/foo</code> 都可访问 — URL 看起来更干净</td>
+        </tr>
+      </table>
+    </div>
+
+    <h3>"一行命令发布一篇文章"</h3>
+    <p>
+      上面这些节点配好以后，我把"复制文件 + 改权限 + 更新首页列表"这三件机械活封装成一个脚本
+      <code>publish-blog</code>（放在 <code>/usr/local/bin/</code>）。
+      从这一刻开始，发布一篇文章就只是一行：
+    </p>
+
+<pre><code># 自动从 HTML 提取 &lt;title&gt; 和 description,自动更新首页列表
+publish-blog ./my-post.html --tag DevOps
+
+# 修改后重发(幂等,不会在首页留下重复条目)
+publish-blog ./my-post.html --tag DevOps --force
+
+# 只发布单页,不动首页
+publish-blog ./my-post.html --no-index</code></pre>
+
+    <p>脚本背后做的事:</p>
+    <ul>
+      <li><strong>校验 slug</strong> — 只允许 <code>[a-zA-Z0-9_-]</code>，防路径穿越。</li>
+      <li><strong>自动提取标题和摘要</strong> — 从 HTML 的 <code>&lt;title&gt;</code> 和 <code>&lt;meta name="description"&gt;</code> 读取，省得手抄。</li>
+      <li><strong>权限对齐</strong> — <code>chown nginx:nginx</code> + <code>chmod 644</code>，避免 403。</li>
+      <li><strong>幂等的首页插入</strong> — 用 <code>awk</code> 在首页模板的注释 marker 前插入条目；如果同 slug 已存在，先删旧再插新，多次 <code>--force</code> 结果不变。</li>
+      <li><strong>无需 reload</strong> — nginx 看的是磁盘文件，新建/更新 HTML 立即生效，不用重启服务。</li>
+    </ul>
+
+    <div class="card highlight">
+      <strong>💡 为什么这套链路这么轻</strong>
+      <p style="margin-top: 0.5rem;">
+        没有数据库、没有构建工具、没有 SSG、没有任何运行时 — 只是"HTML 文件 + nginx + 一个脚本"。
+        但因为 Claude Code 能直接生成成品 HTML，"全静态"反而成了 AI 时代的最佳实践: 内容生成在云端，
+        分发由几十年成熟的 nginx 兜底，整条链路<strong>没有任何会出问题的中间层</strong>。
+      </p>
+    </div>
+
+    <h2>🐙 与 GitHub 联动 — 让 Claude 顺便把 git 也包了</h2>
+    <p>
+      服务器上 <code>gh</code> CLI 和 <code>git</code> 都已配好（这台机器上跑的是 <code>gh 2.93.0</code> + <code>git 2.47.3</code>，
+      作者邮箱已绑定）— 这意味着 Claude Code 在跟你聊代码的同时，也可以直接处理 GitHub 相关的事:
+    </p>
+
+    <div class="feature-grid">
+      <div class="feature">
+        <h4>克隆 & 切分支</h4>
+        <p>一句话:"把 repo X 拉下来，新开 feature/y 分支"，剩下不用管。</p>
+      </div>
+      <div class="feature">
+        <h4>提交 & 推送</h4>
+        <p>改完代码让 Claude 自己写 commit message — 它知道仓库的提交风格。</p>
+      </div>
+      <div class="feature">
+        <h4>开 PR & 写描述</h4>
+        <p><code>gh pr create</code> 自动生成 PR 标题、摘要、测试清单。</p>
+      </div>
+      <div class="feature">
+        <h4>看 issue & 改</h4>
+        <p>"看下 issue #42 然后修一下" — Claude 用 <code>gh issue view</code> 拉取上下文再动手。</p>
+      </div>
+      <div class="feature">
+        <h4>审 PR 给评论</h4>
+        <p><code>gh pr diff</code> + Claude 评审，把意见用 <code>gh pr comment</code> 直接贴回去。</p>
+      </div>
+      <div class="feature">
+        <h4>合并 & 清理分支</h4>
+        <p><code>gh pr merge --squash --delete-branch</code> — 一行收尾。</p>
+      </div>
+    </div>
+
+    <h3>把博客源码也丢进 GitHub</h3>
+    <p>这套静态站点最适合用 git 管：</p>
+<pre><code># 在服务器上(或本地)初始化博客仓库
+cd ~/projects/blog
+git init &amp;&amp; gh repo create blog --private --source=. --remote=origin
+
+# 把所有 .html 提交进去
+git add . &amp;&amp; git commit -m "init"
+git push -u origin main</code></pre>
+
+    <p>之后两种部署姿势二选一：</p>
+
+    <h3>姿势 A: 服务器 pull (最简)</h3>
+<pre><code># 在源码仓库写好新文章,提交推到 GitHub
+git add new-post.html &amp;&amp; git commit -m "post: 新文章" &amp;&amp; git push
+
+# 服务器拉取后用 publish-blog 部署
+ssh ecs "cd ~/projects/blog &amp;&amp; git pull &amp;&amp; publish-blog new-post.html --tag 笔记"</code></pre>
+
+    <h3>姿势 B: GitHub Actions 自动部署 (省手动)</h3>
+    <p>
+      在仓库加一个 workflow，监听 push 到 main，用 SSH key 登录 ECS 跑 <code>publish-blog</code>。
+      关键步骤:
+    </p>
+    <ol>
+      <li>在 GitHub repo settings 加 secrets: <code>SSH_PRIVATE_KEY</code>、<code>SSH_HOST</code>、<code>SSH_USER</code>。</li>
+      <li>workflow 用 <code>appleboy/ssh-action</code> 之类的 action，把变更过的 <code>*.html</code> rsync 到服务器，调用 <code>publish-blog</code>。</li>
+      <li>之后写文章只需要本地 <code>git push</code> — CI 跑完，文章自动上线。</li>
+    </ol>
+
+    <div class="card highlight">
+      <strong>🔁 闭环</strong>
+      <p style="margin-top: 0.5rem;">
+        本地手机/电脑 → Happy 客户端 → 云端 Claude Code → 改 git 仓库的 HTML → 推 GitHub → 自动部署到 nginx → 全网立即可读。
+        整套流程里，<strong>真正"手动"的环节只剩"想要写什么"</strong>。
+      </p>
+    </div>
+
+    <h2>🛡 安全提醒</h2>
+    <ul>
+      <li>SSH 必须只允许 key 登录，禁掉密码。</li>
+      <li>Happy 的配对码 / token 不要外泄 — 等同于一把进入终端的钥匙。</li>
+      <li>云厂商的<strong>安全组 / 防火墙</strong>只放行需要的端口（22、80、443、Happy 监听端口）。</li>
+      <li>开了 NOPASSWD sudo 就务必把 SSH key 用得严格 — 钥匙泄漏 = root 泄漏。</li>
+      <li>API Key 保存在服务器上，写入 <code>~/.claude</code>，注意备份目录别被打包外发。</li>
+    </ul>
+
+    <h2>📝 写在最后</h2>
+    <p>
+      过去十年我们一直在追求"个人电脑本身要够强"，但 AI 时代把这件事彻底翻了过来 — 真正需要"够强"的是
+      <strong>持续在线的算力 + 不断累积的会话上下文</strong>，本地设备只是一块"屏幕"。
+    </p>
+    <p>
+      Happy + Claude Code 这个组合用最朴素的方式诠释了这一点：把脑子放在云上，把眼睛留在身边。
+      装好之后会发现，"开发"这件事再也不是"打开电脑"开始的 — 而是从来没有停止过。
+    </p>
+
+    <footer>
+      <p>© 2026 shiyao · <a href="https://blog.shiyao.pro">blog.shiyao.pro</a> · 由 Claude Code 协助撰写</p>
+    </footer>
+
+  </div>
+</body>
+</html>

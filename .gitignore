@@ -1,0 +1,27 @@
+# Backups
+*.bak
+*.bak.*
+*~
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Local previews
+node_modules/
+out/
+dist/
+
+# Sensitive — never commit
+*.pem
+*.key
+*.crt
+.env
+.env.local
+secrets/
