@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '**.html'
+      - '**.css'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -47,6 +48,7 @@ jobs:
               --exclude='*.bak' --exclude='*.bak.*' \
               --exclude='nginx/' --exclude='scripts/' \
               --include='*.html' \
+              --include='*.css' \
               --include='*/' \
               --exclude='*' \
               --no-perms --no-owner --no-group \

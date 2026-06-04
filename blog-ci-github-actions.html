@@ -5,150 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>全静态博客的 GitHub Actions 自动部署 — 写一篇 push 一次 — blog.shiyao.pro</title>
   <meta name="description" content="把'写好 HTML → ssh 上服务器跑脚本'换成'git push',10 秒上线。一套带三层防御的小而美 CI/CD 拆解,包含真实踩到的三个坑。">
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #0f3a44 0%, #134e5e 50%, #2d7a5f 100%);
-      color: #f0f4f3;
-      min-height: 100vh;
-      line-height: 1.7;
-      padding: 2rem 1rem;
-    }
-    .container { max-width: 900px; margin: 0 auto; }
-
-    header {
-      text-align: center;
-      padding: 3rem 1rem 2rem;
-      border-bottom: 1px solid rgba(255,255,255,0.12);
-      margin-bottom: 3rem;
-    }
-    .badge {
-      display: inline-block;
-      padding: 0.3rem 0.9rem;
-      background: rgba(253, 224, 71, 0.15);
-      color: #fde047;
-      border: 1px solid rgba(253, 224, 71, 0.3);
-      border-radius: 999px;
-      font-size: 0.85rem;
-      margin-bottom: 1rem;
-      letter-spacing: 0.5px;
-    }
-    h1 {
-      font-size: clamp(1.8rem, 5vw, 2.8rem);
-      letter-spacing: 0.5px;
-      margin-bottom: 1rem;
-      background: linear-gradient(135deg, #fff 0%, #b6e3d0 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .subtitle { font-size: 1.05rem; opacity: 0.85; max-width: 720px; margin: 0 auto; }
-    .meta { margin-top: 1.2rem; font-size: 0.85rem; opacity: 0.6; }
-
-    h2 {
-      font-size: 1.5rem;
-      margin: 2.5rem 0 1rem;
-      padding-left: 0.8rem;
-      border-left: 3px solid #71b280;
-      letter-spacing: 0.5px;
-    }
-    h3 { font-size: 1.15rem; margin: 1.5rem 0 0.6rem; color: #b6e3d0; }
-    p { margin-bottom: 1rem; opacity: 0.92; }
-    a { color: #fde047; text-decoration: none; border-bottom: 1px dotted rgba(253,224,71,0.4); }
-    a:hover { border-bottom-style: solid; }
-
-    .card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin: 1.2rem 0;
-      backdrop-filter: blur(4px);
-    }
-    .card.highlight { border-color: rgba(253,224,71,0.35); background: rgba(253,224,71,0.05); }
-    .card.warn { border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.05); }
-
-    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
-    th, td { padding: 0.7rem 0.9rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: top; }
-    th { color: #b6e3d0; font-weight: 600; }
-    td code { background: rgba(0,0,0,0.25); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.88em; }
-
-    pre {
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 8px;
-      padding: 1rem 1.2rem;
-      overflow-x: auto;
-      margin: 1rem 0;
-      font-size: 0.88rem;
-      line-height: 1.55;
-    }
-    code { font-family: "JetBrains Mono", "Fira Code", Consolas, Monaco, monospace; }
-    pre code { color: #e8f5ed; }
-
-    ul, ol { padding-left: 1.4rem; margin-bottom: 1rem; }
-    li { margin-bottom: 0.4rem; opacity: 0.92; }
-    li::marker { color: #fde047; }
-
-    .flow {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin: 1.5rem 0;
-      padding: 1.2rem;
-      background: rgba(0,0,0,0.2);
-      border-radius: 12px;
-    }
-    .flow-item {
-      flex: 1;
-      min-width: 110px;
-      text-align: center;
-      padding: 0.8rem 0.5rem;
-      background: rgba(255,255,255,0.06);
-      border-radius: 8px;
-      font-size: 0.9rem;
-    }
-    .flow-item .emoji { font-size: 1.6rem; display: block; margin-bottom: 0.3rem; }
-    .flow-arrow { color: #71b280; font-size: 1.3rem; }
-    @media (max-width: 600px) {
-      .flow { flex-direction: column; }
-      .flow-arrow { transform: rotate(90deg); }
-    }
-
-    .pitfall {
-      background: rgba(251, 146, 60, 0.06);
-      border-left: 3px solid #fb923c;
-      padding: 1rem 1.2rem;
-      margin: 1rem 0;
-      border-radius: 0 8px 8px 0;
-    }
-    .pitfall .label {
-      display: inline-block;
-      padding: 0.15rem 0.6rem;
-      background: rgba(251, 146, 60, 0.18);
-      color: #fdba74;
-      border-radius: 4px;
-      font-size: 0.78rem;
-      margin-bottom: 0.5rem;
-      letter-spacing: 0.5px;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 4rem;
-      padding-top: 2rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      font-size: 0.85rem;
-      opacity: 0.6;
-    }
-  </style>
+  <script>
+    (() => {
+      try {
+        const theme = localStorage.getItem("blog-shiyao-theme") || "paper";
+        document.documentElement.dataset.theme = theme;
+      } catch {
+        document.documentElement.dataset.theme = "paper";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="theme.css?v=20260604-theme">
 </head>
-<body>
+<body class="article">
   <div class="container">
+
+    <nav class="site-nav" aria-label="站点导航">
+      <a class="site-brand" href="/">blog.shiyao.pro</a>
+      <div class="theme-switcher" aria-label="主题切换">
+        <button class="theme-button" type="button" data-theme-choice="paper" aria-pressed="true">
+          <span class="swatch" style="--swatch: #3157d5"></span>纸白
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="ink" aria-pressed="false">
+          <span class="swatch" style="--swatch: #f0a33a"></span>墨黑
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="signal" aria-pressed="false">
+          <span class="swatch" style="--swatch: #b42318"></span>编辑
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="studio" aria-pressed="false">
+          <span class="swatch" style="--swatch: #0f5f99"></span>工作室
+        </button>
+      </div>
+    </nav>
 
     <header>
       <span class="badge">CI/CD · DevOps</span>
@@ -186,19 +74,19 @@
     <h2>🎯 设计目标</h2>
     <div class="feature-grid card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
       <div>
-        <h3 style="color: #fde047; font-size: 1rem; margin: 0 0 0.3rem;">⚡ 快</h3>
+        <h3 style="color: var(--accent); font-size: 1rem; margin: 0 0 0.3rem;">⚡ 快</h3>
         <p style="font-size: 0.88rem; margin: 0; opacity: 0.85;">push 到上线 &lt; 15 秒</p>
       </div>
       <div>
-        <h3 style="color: #fde047; font-size: 1rem; margin: 0 0 0.3rem;">🪞 镜像</h3>
+        <h3 style="color: var(--accent); font-size: 1rem; margin: 0 0 0.3rem;">🪞 镜像</h3>
         <p style="font-size: 0.88rem; margin: 0; opacity: 0.85;">webroot 严格等于仓库里的 *.html</p>
       </div>
       <div>
-        <h3 style="color: #fde047; font-size: 1rem; margin: 0 0 0.3rem;">🛡 最小权限</h3>
+        <h3 style="color: var(--accent); font-size: 1rem; margin: 0 0 0.3rem;">🛡 最小权限</h3>
         <p style="font-size: 0.88rem; margin: 0; opacity: 0.85;">专用 deploy key，不复用个人 SSH key</p>
       </div>
       <div>
-        <h3 style="color: #fde047; font-size: 1rem; margin: 0 0 0.3rem;">🧪 自检</h3>
+        <h3 style="color: var(--accent); font-size: 1rem; margin: 0 0 0.3rem;">🧪 自检</h3>
         <p style="font-size: 0.88rem; margin: 0; opacity: 0.85;">CI 跑完跑一遍 curl 看真上线</p>
       </div>
     </div>
@@ -461,5 +349,31 @@ gh run watch</code></pre>
     </footer>
 
   </div>
+  <script>
+    (() => {
+      const storageKey = "blog-shiyao-theme";
+      const themes = new Set(["paper", "ink", "signal", "studio"]);
+      const buttons = [...document.querySelectorAll("[data-theme-choice]")];
+      const setTheme = (theme) => {
+        const nextTheme = themes.has(theme) ? theme : "paper";
+        document.documentElement.dataset.theme = nextTheme;
+        try {
+          localStorage.setItem(storageKey, nextTheme);
+        } catch {}
+        buttons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.themeChoice === nextTheme));
+        });
+      };
+
+      let initialTheme = "paper";
+      try {
+        initialTheme = localStorage.getItem(storageKey) || "paper";
+      } catch {}
+      setTheme(initialTheme);
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setTheme(button.dataset.themeChoice));
+      });
+    })();
+  </script>
 </body>
 </html>
