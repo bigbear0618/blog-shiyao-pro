@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全静态博客的 GitHub Actions 自动部署 — 写一篇 push 一次 — blog.shiyao.pro</title>
+  <meta name="description" content="把'写好 HTML → ssh 上服务器跑脚本'换成'git push',10 秒上线。一套带三层防御的小而美 CI/CD 拆解,包含真实踩到的三个坑。">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #0f3a44 0%, #134e5e 50%, #2d7a5f 100%);
+      color: #f0f4f3;
+      min-height: 100vh;
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      margin-bottom: 3rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: rgba(253, 224, 71, 0.15);
+      color: #fde047;
+      border: 1px solid rgba(253, 224, 71, 0.3);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      letter-spacing: 0.5px;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #fff 0%, #b6e3d0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle { font-size: 1.05rem; opacity: 0.85; max-width: 720px; margin: 0 auto; }
+    .meta { margin-top: 1.2rem; font-size: 0.85rem; opacity: 0.6; }
+
+    h2 {
+      font-size: 1.5rem;
+      margin: 2.5rem 0 1rem;
+      padding-left: 0.8rem;
+      border-left: 3px solid #71b280;
+      letter-spacing: 0.5px;
+    }
+    h3 { font-size: 1.15rem; margin: 1.5rem 0 0.6rem; color: #b6e3d0; }
+    p { margin-bottom: 1rem; opacity: 0.92; }
+    a { color: #fde047; text-decoration: none; border-bottom: 1px dotted rgba(253,224,71,0.4); }
+    a:hover { border-bottom-style: solid; }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.2rem 0;
+      backdrop-filter: blur(4px);
+    }
+    .card.highlight { border-color: rgba(253,224,71,0.35); background: rgba(253,224,71,0.05); }
+    .card.warn { border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.05); }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+    th, td { padding: 0.7rem 0.9rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: top; }
+    th { color: #b6e3d0; font-weight: 600; }
+    td code { background: rgba(0,0,0,0.25); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.88em; }
+
+    pre {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+    code { font-family: "JetBrains Mono", "Fira Code", Consolas, Monaco, monospace; }
+    pre code { color: #e8f5ed; }
+
+    ul, ol { padding-left: 1.4rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.4rem; opacity: 0.92; }
+    li::marker { color: #fde047; }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+      padding: 1.2rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+    }
+    .flow-item {
+      flex: 1;
+      min-width: 110px;
+      text-align: center;
+      padding: 0.8rem 0.5rem;
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .flow-item .emoji { font-size: 1.6rem; display: block; margin-bottom: 0.3rem; }
+    .flow-arrow { color: #71b280; font-size: 1.3rem; }
+    @media (max-width: 600px) {
+      .flow { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+    }
+
+    .pitfall {
+      background: rgba(251, 146, 60, 0.06);
+      border-left: 3px solid #fb923c;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .pitfall .label {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      background: rgba(251, 146, 60, 0.18);
+      color: #fdba74;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.85rem;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <span class="badge">CI/CD · DevOps</span>
+      <h1>全静态博客的 GitHub Actions 自动部署<br>— 写一篇 push 一次</h1>
+      <p class="subtitle">把"写好 HTML → SSH 上服务器跑脚本"换成"<code>git push</code>"，10 秒上线。一套带三层防御的小而美 CI/CD 拆解，附三个真实踩到的坑。</p>
+      <p class="meta">2026-06-04 · shiyao</p>
+    </header>
+
+    <h2>📌 为什么手动 publish-blog 已经很顺,还要做 CI?</h2>
+    <p>
+      在上一篇 <a href="/happy-claude-247">Happy + Claude Code：7×24 在线</a> 里，我们已经有了
+      <code>publish-blog</code> 脚本 — 一行命令就能把 HTML 推到 nginx。看起来已经够轻了。
+      但用了几天后发现三个新需求:
+    </p>
+
+    <div class="card">
+      <ol>
+        <li><strong>多设备时,"哪台机器是真相"开始模糊</strong>。手机上 Happy 改一段，笔记本又改一段，最后到底谁对？</li>
+        <li><strong>万一服务器挂了,博客就没了</strong>。webroot 里的 HTML 没有别的副本。</li>
+        <li><strong>想把发布过程暴露在 git history 里</strong> — 每篇文章对应一个 commit，回滚改动是 <code>git revert</code> 一行。</li>
+      </ol>
+    </div>
+
+    <p>
+      解法是让 <strong>git 仓库成为唯一真相</strong>，CI 负责把仓库内容同步到 webroot。
+      这样:
+    </p>
+    <ul>
+      <li>多设备协作: 谁先 push 谁赢，冲突走 git rebase</li>
+      <li>天然备份: GitHub 是天然异地副本</li>
+      <li>历史可回滚: <code>git revert</code> + push，CI 自动把旧版重新部署</li>
+      <li>本地写作不用 ssh: <code>git push</code> 就完事</li>
+    </ul>
+
+    <h2>🎯 设计目标</h2>
+    <div class="feature-grid card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+      <div>
+        <h3 style="color: #fde047; font-size: 1rem; margin: 0 0 0.3rem;">⚡ 快</h3>
+        <p style="font-size: 0.88rem; margin: 0; opacity: 0.85;">push 到上线 &lt; 15 秒</p>
+      </div>
+      <div>
+        <h3 style="color: #fde047; font-size: 1rem; margin: 0 0 0.3rem;">🪞 镜像</h3>
+        <p style="font-size: 0.88rem; margin: 0; opacity: 0.85;">webroot 严格等于仓库里的 *.html</p>
+      </div>
+      <div>
+        <h3 style="color: #fde047; font-size: 1rem; margin: 0 0 0.3rem;">🛡 最小权限</h3>
+        <p style="font-size: 0.88rem; margin: 0; opacity: 0.85;">专用 deploy key，不复用个人 SSH key</p>
+      </div>
+      <div>
+        <h3 style="color: #fde047; font-size: 1rem; margin: 0 0 0.3rem;">🧪 自检</h3>
+        <p style="font-size: 0.88rem; margin: 0; opacity: 0.85;">CI 跑完跑一遍 curl 看真上线</p>
+      </div>
+    </div>
+
+    <h2>🔁 链路一图看完</h2>
+    <div class="flow">
+      <div class="flow-item"><span class="emoji">⌨️</span>本地/服务器<br><small style="opacity:0.7">编辑 HTML</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">📤</span>git push<br><small style="opacity:0.7">main 分支</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">🤖</span>GitHub Actions<br><small style="opacity:0.7">~10s</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">🔐</span>SSH (deploy key)<br><small style="opacity:0.7">to ECS</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">📁</span>rsync → nginx<br><small style="opacity:0.7">webroot</small></div>
+    </div>
+
+    <h2>🛠 实现拆解</h2>
+
+    <h3>1. 专用 deploy key (ed25519)</h3>
+    <p>
+      <strong>关键决策: 不要复用个人 SSH key</strong>。给这个仓库单独生成一对，写明用途，方便以后撤销。
+    </p>
+<pre><code># 服务器上生成,不带密码 (CI 没法输入密码)
+ssh-keygen -t ed25519 -N "" \
+  -f ~/.ssh/blog_deploy_ed25519 \
+  -C "blog-shiyao-pro-deploy@github-actions"
+
+# 公钥追加到 authorized_keys
+cat ~/.ssh/blog_deploy_ed25519.pub &gt;&gt; ~/.ssh/authorized_keys</code></pre>
+
+    <p>公钥末尾的注释字段 <code>blog-shiyao-pro-deploy@github-actions</code> 是关键 — 哪天想撤销，一行 sed 就行:</p>
+<pre><code>sed -i '/blog-shiyao-pro-deploy/d' ~/.ssh/authorized_keys</code></pre>
+
+    <h3>2. 把 secrets 喂给 GitHub</h3>
+    <p>用 <code>gh</code> CLI 一句话搞定，不用进 web UI:</p>
+<pre><code># 私钥从文件读,不会回显到日志
+gh secret set DEPLOY_SSH_KEY &lt; ~/.ssh/blog_deploy_ed25519
+gh secret set DEPLOY_HOST --body "47.x.x.x"
+gh secret set DEPLOY_USER --body "shiyao"
+
+gh secret list   # 验证</code></pre>
+
+    <h3>3. workflow 全文</h3>
+    <p>这是真正在跑的 <code>.github/workflows/deploy.yml</code>:</p>
+
+<pre><code>name: Deploy to blog.shiyao.pro
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.html'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-blog
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          command_timeout: 3m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            REPO=~/projects/blog-shiyao-pro
+            WEBROOT=/var/www/blog.shiyao.pro
+
+            cd "$REPO"
+            git fetch --quiet origin main
+            git reset --hard origin/main
+
+            sudo rsync -av --delete --prune-empty-dirs \
+              --exclude='.*' \
+              --exclude='*.bak' --exclude='*.bak.*' \
+              --exclude='nginx/' --exclude='scripts/' \
+              --include='*.html' \
+              --include='*/' \
+              --exclude='*' \
+              --no-perms --no-owner --no-group \
+              "$REPO/" "$WEBROOT/"
+
+            sudo chown -R nginx:nginx "$WEBROOT"
+            sudo find "$WEBROOT" -type f -exec chmod 644 {} \;
+            sudo find "$WEBROOT" -type d -exec chmod 755 {} \;
+
+            # smoke test
+            curl -fsS -o /dev/null -w "Home: %{http_code}\n" https://blog.shiyao.pro/
+            curl -fsS -o /dev/null -w "Post: %{http_code}\n" https://blog.shiyao.pro/happy-claude-247</code></pre>
+
+    <p>几个关键设计:</p>
+    <ul>
+      <li><code>concurrency.group</code> — 同时只能一个部署在跑，避免新旧 push 互相打架</li>
+      <li><code>git reset --hard origin/main</code> — 比 <code>git pull</code> 干净，能处理服务器上意外的本地修改</li>
+      <li><code>--delete</code> — webroot 严格镜像仓库，仓库里删的文件 webroot 也会删</li>
+      <li><code>script_stop: true</code> — 任何一步失败立刻中止，不会"半部署"</li>
+      <li><strong>需要 NOPASSWD sudo</strong> — 写 <code>/var/www</code> 必须，CI 没法输密码</li>
+    </ul>
+
+    <h2>⚠️ 真实踩到的三个坑</h2>
+    <p>不是我想夸张做戏 — 这套上线时第一次 CI 就 fail，后面又发现安全问题。三个都有教育价值，记一下:</p>
+
+    <div class="pitfall">
+      <span class="label">坑 1 · 工具缺失</span>
+      <p style="margin: 0;">
+        <strong>症状</strong>: 首次 CI 失败,日志: <code>sudo: rsync: command not found</code>
+      </p>
+      <p style="margin-top: 0.5rem; margin-bottom: 0;">
+        <strong>根因</strong>: Alibaba Cloud Linux 4 默认没装 <code>rsync</code>。一直手动 <code>cp</code> 用得没发现。
+      </p>
+      <p style="margin-top: 0.5rem; margin-bottom: 0;">
+        <strong>修复</strong>: <code>sudo dnf install -y rsync</code>。教训 — CI 用什么工具，先在目标机上验证。
+      </p>
+    </div>
+
+    <div class="pitfall">
+      <span class="label">坑 2 · rsync 把 .git 也同步了</span>
+      <p style="margin: 0;">
+        <strong>症状</strong>: 部署完看 webroot,发现多了 <code>.git/</code> <code>.github/</code> <code>nginx/</code> <code>scripts/</code> 这些目录。
+      </p>
+      <p style="margin-top: 0.5rem; margin-bottom: 0;">
+        <strong>根因</strong>: 最初的 rsync 规则是
+      </p>
+<pre style="margin: 0.5rem 0;"><code>--include='*.html'
+--include='*/'      ← 这一行允许递归进入所有目录
+--exclude='*'</code></pre>
+      <p style="margin-top: 0.5rem; margin-bottom: 0;">
+        <code>--include='*/'</code> 让 rsync 遍历所有目录但只复制 <code>.html</code> 文件 — 文件是对的，<strong>但空目录被创建出来了</strong>，包括 <code>.git/</code>。
+      </p>
+      <p style="margin-top: 0.5rem; margin-bottom: 0;">
+        <strong>修复</strong>: 加 <code>--exclude='.*'</code>、<code>--prune-empty-dirs</code>、<code>--delete</code> 三连。
+        <code>--prune-empty-dirs</code> 是最关键的一个 — 不会创建/保留空目录。
+      </p>
+    </div>
+
+    <div class="pitfall">
+      <span class="label">坑 3 · 残留 .bak 文件可公开访问</span>
+      <p style="margin: 0;">
+        <strong>症状</strong>: <code>curl https://blog.shiyao.pro/index.html.bak.20260604</code> 返回 200，内容是早期占位页。
+      </p>
+      <p style="margin-top: 0.5rem; margin-bottom: 0;">
+        <strong>根因</strong>: 之前手动调试时为了安全留了 <code>.bak</code> 备份，CI 上线后忘了清。nginx 默认对 <code>.bak</code> 没特殊处理，所以可以直接访问。
+      </p>
+      <p style="margin-top: 0.5rem; margin-bottom: 0;">
+        <strong>修复</strong>: <strong>两道防御</strong>。
+      </p>
+      <ol style="margin: 0.5rem 0 0;">
+        <li>立即从 webroot 删干净 + rsync 加 <code>--exclude='*.bak*'</code></li>
+        <li>nginx 加一条 location 屏蔽，万一 rsync 漏了也访问不到:
+<pre style="margin: 0.5rem 0;"><code>location ~* \.(bak|orig|tmp|swp|swo)(\..+)?$ {
+    deny all;
+    access_log off;
+    log_not_found off;
+}</code></pre>
+        </li>
+      </ol>
+    </div>
+
+    <h2>🛡 三道防御纵深</h2>
+    <p>修完上面三个坑，整套系统现在有三层独立防御应对"敏感文件意外暴露":</p>
+    <div class="card">
+      <table>
+        <tr><th>层</th><th>内容</th><th>能挡住什么</th></tr>
+        <tr>
+          <td>1. <strong>仓库 .gitignore</strong></td>
+          <td><code>*.pem</code> <code>*.key</code> <code>.env</code> <code>secrets/</code></td>
+          <td>本地误 <code>git add</code> 敏感文件</td>
+        </tr>
+        <tr>
+          <td>2. <strong>CI rsync 规则</strong></td>
+          <td><code>--exclude='.*'</code> <code>--exclude='*.bak*'</code> <code>--prune-empty-dirs</code></td>
+          <td>即使仓库里有点文件，也不会同步进 webroot</td>
+        </tr>
+        <tr>
+          <td>3. <strong>nginx location 规则</strong></td>
+          <td><code>/\.</code> 和 <code>\.(bak|orig|tmp|swp)$</code> 都 <code>deny all</code></td>
+          <td>即使文件在 webroot 里,nginx 也直接返回 403</td>
+        </tr>
+      </table>
+    </div>
+    <p>
+      任何一层独立都能挡，但任何一层单独失效，剩下两层还在。这就是
+      <strong>defense in depth</strong> 的精神 — 不假设某一层 100% 可靠。
+    </p>
+
+    <h2>📊 实际效果</h2>
+    <div class="card highlight">
+      <table style="margin: 0;">
+        <tr><th>指标</th><th>数字</th></tr>
+        <tr><td>workflow 跑完总时长</td><td><strong>~10 秒</strong>(含 SSH 建连、git pull、rsync、smoke test)</td></tr>
+        <tr><td>SSH 阶段耗时</td><td>~2 秒</td></tr>
+        <tr><td>rsync 增量同步</td><td>&lt; 1 秒 (新文章通常只几十 KB)</td></tr>
+        <tr><td>smoke test (2 个 URL)</td><td>~150 毫秒</td></tr>
+        <tr><td>从 <code>git push</code> 到博客上线</td><td><strong>15 秒以内</strong></td></tr>
+      </table>
+    </div>
+
+    <h2>🔁 现在的工作流</h2>
+    <p>写一篇新文章的全部步骤现在长这样:</p>
+<pre><code># 1. 拉最新
+cd ~/projects/blog-shiyao-pro &amp;&amp; git pull
+
+# 2. 写文章
+vim new-post.html
+# (改 index.html 加一条链接)
+
+# 3. 提交推送
+git add new-post.html index.html
+git commit -m "post: 新文章标题"
+git push
+
+# 4. (可选) 看 CI 跑得怎样
+gh run watch</code></pre>
+
+    <p>就这。<strong>第 4 步还可以省 —</strong> 反正 10 秒后博客自己就更新了，相信 CI。</p>
+
+    <h2>📝 这套方案适合谁</h2>
+    <ul>
+      <li><strong>个人博客 / 文档站 / Landing page</strong> — 任何全静态、低频更新的内容</li>
+      <li><strong>单人或两三人小团队</strong> — 不需要复杂的 review 流程</li>
+      <li><strong>已经有云服务器</strong>的人 — 不想额外买 GitHub Pages 或 Vercel</li>
+      <li><strong>喜欢"自己掌控部署链路"</strong>的人 — 没有黑盒，每一步都看得见</li>
+    </ul>
+
+    <p>不适合谁:</p>
+    <ul>
+      <li>高频更新（一天几十篇）— CI 排队和限流会变成瓶颈</li>
+      <li>对部署延迟敏感（&lt;1 秒）— rsync + ssh 链路有 ~10 秒固定成本</li>
+      <li>团队 &gt; 10 人 — 应该上正经 CDN + 静态托管</li>
+    </ul>
+
+    <h2>📚 仓库地址</h2>
+    <p>
+      整套代码、workflow、nginx 配置和 publish-blog 脚本都在这里:<br>
+      <a href="https://github.com/bigbear0618/blog-shiyao-pro">https://github.com/bigbear0618/blog-shiyao-pro</a>
+    </p>
+    <p>欢迎 fork 改成你自己的博客。</p>
+
+    <div class="card highlight">
+      <strong>🎁 彩蛋</strong>
+      <p style="margin-top: 0.5rem;">
+        你现在读到的这篇文章 — <strong>本身就是通过这套 CI 部署的</strong>。
+        我在 Claude Code 里把它写完，<code>git push</code>，10 秒后你就能在
+        <code>blog.shiyao.pro/blog-ci-github-actions</code> 看到。
+      </p>
+    </div>
+
+    <footer>
+      <p>© 2026 shiyao · <a href="https://blog.shiyao.pro">blog.shiyao.pro</a> · 由 Claude Code 协助撰写</p>
+    </footer>
+
+  </div>
+</body>
+</html>
