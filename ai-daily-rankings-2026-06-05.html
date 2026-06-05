@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日 AI 榜单：资讯、GitHub 趋势、X 推荐热门 — blog.shiyao.pro</title>
+  <meta name="description" content="2026-06-05 今日 AI 榜单页面：AI 资讯榜、GitHub daily trending AI 项目榜、Twitter/X 推荐热门话题榜。">
+  <script>
+    (() => {
+      try {
+        const theme = localStorage.getItem("blog-shiyao-theme") || "paper";
+        document.documentElement.dataset.theme = theme;
+      } catch {
+        document.documentElement.dataset.theme = "paper";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="theme.css?v=20260604-theme">
+  <style>
+    .dashboard-note {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin: 1.2rem 0 2rem;
+    }
+
+    .metric {
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--accent);
+      font-size: 1.55rem;
+      line-height: 1;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .rank-list {
+      display: grid;
+      gap: 0.85rem;
+      margin: 1.2rem 0 2.2rem;
+    }
+
+    .rank-item {
+      display: grid;
+      gap: 0.7rem;
+      grid-template-columns: 48px 1fr auto;
+      align-items: start;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: 0 10px 28px rgba(24, 24, 27, 0.035);
+    }
+
+    .rank-num {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .rank-body h3 {
+      margin: 0 0 0.25rem;
+      color: var(--ink);
+      font-size: 1.05rem;
+      line-height: 1.35;
+    }
+
+    .rank-body p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.62;
+    }
+
+    .rank-meta {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 0.6rem;
+      border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      white-space: nowrap;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .source-row {
+      margin-top: 0.5rem;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .source-row a {
+      margin-right: 0.7rem;
+    }
+
+    @media (max-width: 700px) {
+      .rank-item {
+        grid-template-columns: 40px 1fr;
+      }
+
+      .rank-meta {
+        grid-column: 2;
+        justify-self: start;
+      }
+    }
+  </style>
+</head>
+<body class="article">
+  <div class="container">
+
+    <nav class="site-nav" aria-label="站点导航">
+      <a class="site-brand" href="/">blog.shiyao.pro</a>
+      <div class="theme-switcher" aria-label="主题切换">
+        <button class="theme-button" type="button" data-theme-choice="paper" aria-pressed="true">
+          <span class="swatch" style="--swatch: #3157d5"></span>纸白
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="ink" aria-pressed="false">
+          <span class="swatch" style="--swatch: #f0a33a"></span>墨黑
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="signal" aria-pressed="false">
+          <span class="swatch" style="--swatch: #b42318"></span>编辑
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="studio" aria-pressed="false">
+          <span class="swatch" style="--swatch: #0f5f99"></span>工作室
+        </button>
+      </div>
+    </nav>
+
+    <header>
+      <span class="badge">AI DAILY · RANKINGS</span>
+      <h1>今日 AI 榜单<br>资讯、GitHub 趋势、X 推荐热门</h1>
+      <p class="subtitle">一页看完今天最值得跟的 AI 事件、开源项目和社交讨论。数据口径：2026-06-05，GitHub 为 daily trending 快照，X 部分为公开可抓取信息 + 推荐关注话题，不等同于 X 官方实时热榜。</p>
+      <p class="meta">2026-06-05 · shiyao</p>
+    </header>
+
+    <div class="dashboard-note">
+      <div class="metric">
+        <strong>6</strong>
+        <span>AI 资讯重点</span>
+      </div>
+      <div class="metric">
+        <strong>8</strong>
+        <span>GitHub AI 趋势项目</span>
+      </div>
+      <div class="metric">
+        <strong>6</strong>
+        <span>X 推荐热门话题</span>
+      </div>
+    </div>
+
+    <div class="card highlight">
+      <strong>今日判断</strong>
+      <p style="margin-top: 0.5rem;">
+        今天的主线不是单点模型发布，而是 <strong>Agent 工作流平台化</strong>：Codex 进企业和 AWS，Claude 往安全和长周期任务走，GitHub Trending 上也集中出现 agent harness、token compression、agent frontend、memory、search 等基础设施项目。
+      </p>
+    </div>
+
+    <h2>今日 AI 资讯榜</h2>
+    <div class="rank-list">
+      <div class="rank-item">
+        <div class="rank-num">1</div>
+        <div class="rank-body">
+          <h3>OpenAI 发布 frontier AI 民主治理蓝图</h3>
+          <p>OpenAI 继续把前沿模型治理从“公司内部安全流程”推向“可公开讨论、可审计、可制度化”的方向。</p>
+          <div class="source-row"><a href="https://openai.com/index/frontier-safety-blueprint/">OpenAI</a></div>
+        </div>
+        <span class="rank-meta">治理 / 安全</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">2</div>
+        <div class="rank-body">
+          <h3>OpenAI frontier models 和 Codex 登陆 AWS</h3>
+          <p>OpenAI 模型进入 Amazon Bedrock，企业可以用 AWS 原生权限、审计和治理体系部署 Codex 与 frontier models。</p>
+          <div class="source-row"><a href="https://openai.com/index/openai-frontier-models-and-codex-are-now-available-on-aws/">OpenAI</a></div>
+        </div>
+        <span class="rank-meta">企业部署</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">3</div>
+        <div class="rank-body">
+          <h3>Codex 从 coding agent 扩展到白领知识工作</h3>
+          <p>OpenAI 正把 Codex 从开发工具扩展成组织内工作 agent；报道提到非开发者用户正在快速增长。</p>
+          <div class="source-row"><a href="https://techcrunch.com/2026/06/02/openai-launches-new-codex-tools-for-white-collar-work/">TechCrunch</a></div>
+        </div>
+        <span class="rank-meta">Agent</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">4</div>
+        <div class="rank-body">
+          <h3>Anthropic 扩大 Project Glasswing / Claude Mythos 安全项目</h3>
+          <p>Claude Mythos 被用于关键基础设施漏洞发现，项目扩展到更多国家和组织，AI 安全扫描进入实战阶段。</p>
+          <div class="source-row"><a href="https://techcrunch.com/2026/06/02/anthropic-scales-claude-mythos-to-critical-infrastructure-in-15-countries/">TechCrunch</a></div>
+        </div>
+        <span class="rank-meta">Cyber AI</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">5</div>
+        <div class="rank-body">
+          <h3>Claude Opus 4.8 继续成为模型讨论焦点</h3>
+          <p>Opus 4.8 的 agentic coding、long-context、dynamic workflow 能力仍在开发者圈发酵，是今天模型层最值得跟的一条线。</p>
+          <div class="source-row"><a href="https://www.anthropic.com/news/claude-opus-4-8">Anthropic</a><a href="https://artificialanalysis.ai/articles">Artificial Analysis</a></div>
+        </div>
+        <span class="rank-meta">模型</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">6</div>
+        <div class="rank-body">
+          <h3>语音、开源权重和高速推理也在升温</h3>
+          <p>Artificial Analysis 近期跟踪了 MAI-Transcribe-1.5、Nemotron 3 Ultra 等发布，说明竞争正从文本大模型扩散到语音、开源和推理成本。</p>
+          <div class="source-row"><a href="https://artificialanalysis.ai/articles">Artificial Analysis</a></div>
+        </div>
+        <span class="rank-meta">模型生态</span>
+      </div>
+    </div>
+
+    <h2>GitHub 趋势榜 · AI / Agent</h2>
+    <p>来源：<a href="https://github.com/trending?spoken_language_code=&amp;since=daily">GitHub Trending daily</a>，抓取时间为 2026-06-05。下面筛选了今日榜单中与 AI、agent、LLM tooling 相关的项目。</p>
+    <div class="rank-list">
+      <div class="rank-item">
+        <div class="rank-num">1</div>
+        <div class="rank-body">
+          <h3><a href="https://github.com/chopratejas/headroom">chopratejas/headroom</a></h3>
+          <p>压缩 tool outputs、logs、files 和 RAG chunks，号称减少 60-95% tokens，面向 LLM 工具链和 MCP。</p>
+        </div>
+        <span class="rank-meta">+3,142 stars</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">2</div>
+        <div class="rank-body">
+          <h3><a href="https://github.com/NousResearch/hermes-agent">NousResearch/hermes-agent</a></h3>
+          <p>“The agent that grows with you”，NousResearch 的 agent 项目，今天仍是 AI 开源关注焦点。</p>
+        </div>
+        <span class="rank-meta">+1,913 stars</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">3</div>
+        <div class="rank-body">
+          <h3><a href="https://github.com/affaan-m/ECC">affaan-m/ECC</a></h3>
+          <p>Agent harness 性能优化系统，覆盖 skills、memory、security、research-first development，面向 Claude Code / Codex / Cursor 等。</p>
+        </div>
+        <span class="rank-meta">+1,750 stars</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">4</div>
+        <div class="rank-body">
+          <h3><a href="https://github.com/CopilotKit/CopilotKit">CopilotKit/CopilotKit</a></h3>
+          <p>Agent 与 Generative UI 的前端栈，React / Angular 生态，AG-UI Protocol 相关。</p>
+        </div>
+        <span class="rank-meta">+350 stars</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">5</div>
+        <div class="rank-body">
+          <h3><a href="https://github.com/666ghj/MiroFish">666ghj/MiroFish</a></h3>
+          <p>通用群体智能引擎，定位是“预测万物”，属于 swarm intelligence / agent 集体智能方向。</p>
+        </div>
+        <span class="rank-meta">+324 stars</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">6</div>
+        <div class="rank-body">
+          <h3><a href="https://github.com/mvanhorn/last30days-skill">mvanhorn/last30days-skill</a></h3>
+          <p>面向 AI agent 的研究 skill，可跨 Reddit、X、YouTube、HN、Polymarket 和 Web 汇总主题。</p>
+        </div>
+        <span class="rank-meta">+199 stars</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">7</div>
+        <div class="rank-body">
+          <h3><a href="https://github.com/Panniantong/Agent-Reach">Panniantong/Agent-Reach</a></h3>
+          <p>给 AI agent “看互联网”的 CLI，覆盖 Twitter、Reddit、YouTube、GitHub、Bilibili、小红书等。</p>
+        </div>
+        <span class="rank-meta">+127 stars</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">8</div>
+        <div class="rank-body">
+          <h3><a href="https://github.com/NVIDIA/cosmos">NVIDIA/cosmos</a></h3>
+          <p>NVIDIA 面向 Physical AI 的 world models、datasets 和工具平台，关联机器人、自动驾驶、智能基础设施。</p>
+        </div>
+        <span class="rank-meta">+133 stars</span>
+      </div>
+    </div>
+
+    <h2>Twitter / X 推荐热门榜</h2>
+    <p>X 没有稳定公开的实时趋势 API；下面是结合可公开抓取的 X 话题页、官方公告和开发者社区讨论，整理出的“今天值得追”的 AI 话题。</p>
+    <div class="rank-list">
+      <div class="rank-item">
+        <div class="rank-num">1</div>
+        <div class="rank-body">
+          <h3>Claude Opus 4.8 / Dynamic Workflows</h3>
+          <p>围绕 Opus 4.8 的编码 benchmark、dynamic workflows、subagents 和长任务恢复能力，仍是今天 X 上最值得关注的模型话题。</p>
+          <div class="source-row"><a href="https://x.com/i/trending/2059975874665967872?lang=en">X topic</a><a href="https://www.anthropic.com/news/claude-opus-4-8">Anthropic</a></div>
+        </div>
+        <span class="rank-meta">模型 / Agent</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">2</div>
+        <div class="rank-body">
+          <h3>Codex 企业化与知识工作流</h3>
+          <p>Codex 正从 coding agent 变成企业工作入口；关注点包括 AWS、企业权限、白领知识工作和多 agent 协作。</p>
+          <div class="source-row"><a href="https://openai.com/index/openai-frontier-models-and-codex-are-now-available-on-aws/">OpenAI</a><a href="https://techcrunch.com/2026/06/02/openai-launches-new-codex-tools-for-white-collar-work/">TechCrunch</a></div>
+        </div>
+        <span class="rank-meta">Codex</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">3</div>
+        <div class="rank-body">
+          <h3>html-video / HyperFrames：Agent 生成视频</h3>
+          <p>从“写 HTML 动画”到“Agent 生成视频工作流”，适合把文章、推文、产品介绍快速转成 MP4。</p>
+          <div class="source-row"><a href="https://x.com/tuturetom/status/2062470358687498470">X post</a><a href="https://github.com/nexu-io/html-video">html-video</a><a href="https://github.com/heygen-com/hyperframes">HyperFrames</a></div>
+        </div>
+        <span class="rank-meta">AI Video</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">4</div>
+        <div class="rank-body">
+          <h3>Agent tooling：MCP、skills、memory、token compression</h3>
+          <p>GitHub 今日趋势和 X 开发者圈同时指向一个主题：Agent 已经进入“工具链竞争”，不是只拼模型。</p>
+          <div class="source-row"><a href="https://github.com/trending?spoken_language_code=&amp;since=daily">GitHub Trending</a></div>
+        </div>
+        <span class="rank-meta">工具链</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">5</div>
+        <div class="rank-body">
+          <h3>AI Security：Claude Mythos / Project Glasswing</h3>
+          <p>AI 自动找漏洞、关键基础设施扫描、模型安全边界，是今天偏硬核但影响很大的方向。</p>
+          <div class="source-row"><a href="https://techcrunch.com/2026/06/02/anthropic-scales-claude-mythos-to-critical-infrastructure-in-15-countries/">TechCrunch</a></div>
+        </div>
+        <span class="rank-meta">安全</span>
+      </div>
+
+      <div class="rank-item">
+        <div class="rank-num">6</div>
+        <div class="rank-body">
+          <h3>AI 治理与政府预评测</h3>
+          <p>OpenAI 的治理蓝图与美国政府预发布安全评测机制，说明 frontier AI 的竞争正在进入监管和制度化阶段。</p>
+          <div class="source-row"><a href="https://openai.com/index/frontier-safety-blueprint/">OpenAI</a></div>
+        </div>
+        <span class="rank-meta">政策</span>
+      </div>
+    </div>
+
+    <div class="card warn">
+      <strong>数据说明</strong>
+      <p style="margin-top: 0.5rem;">
+        GitHub stars today 来自 GitHub Trending 页面快照；X 榜单是基于公开可访问页面与相关来源的推荐热门整理，不代表 X 官方实时排序。下一版可以接入脚本自动抓取 GitHub Trending、RSS 和 X 公开 topic 页面，生成每日更新。
+      </p>
+    </div>
+
+    <footer>
+      <p>© 2026 shiyao · <a href="https://blog.shiyao.pro">blog.shiyao.pro</a> · 由 Codex 协助整理</p>
+    </footer>
+
+  </div>
+  <script>
+    (() => {
+      const storageKey = "blog-shiyao-theme";
+      const themes = new Set(["paper", "ink", "signal", "studio"]);
+      const buttons = [...document.querySelectorAll("[data-theme-choice]")];
+      const setTheme = (theme) => {
+        const nextTheme = themes.has(theme) ? theme : "paper";
+        document.documentElement.dataset.theme = nextTheme;
+        try {
+          localStorage.setItem(storageKey, nextTheme);
+        } catch {}
+        buttons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.themeChoice === nextTheme));
+        });
+      };
+
+      let initialTheme = "paper";
+      try {
+        initialTheme = localStorage.getItem(storageKey) || "paper";
+      } catch {}
+      setTheme(initialTheme);
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setTheme(button.dataset.themeChoice));
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -91,6 +91,7 @@ publish-blog <file.html> [选项]
 
 ## 文章列表
 
+- [今日 AI 榜单：资讯、GitHub 趋势、X 推荐热门](ai-daily-rankings-2026-06-05.html) — 2026-06-05
 - [Claude Opus 4.8 Workflow 原理：动态工作流、架构图与代码逻辑](claude-opus-48-workflow.html) — 2026-06-05
 - [html-video 使用指南：Agent 写 HTML，本地导出 MP4](html-video-guide.html) — 2026-06-05
 - [全静态博客的 GitHub Actions 自动部署 — 写一篇 push 一次](blog-ci-github-actions.html) — 2026-06-04
