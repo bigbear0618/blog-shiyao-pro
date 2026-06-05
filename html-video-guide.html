@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Video 使用指南：用网页技术生成 MP4 — blog.shiyao.pro</title>
+  <meta name="description" content="HTML Video 不是在网页里播放视频，而是把 HTML、CSS、JavaScript 当成视频工程：写一个可预览的网页，再用 HyperFrames 这类 HTML-to-video 工具渲染成 MP4。">
+  <script>
+    (() => {
+      try {
+        const theme = localStorage.getItem("blog-shiyao-theme") || "paper";
+        document.documentElement.dataset.theme = theme;
+      } catch {
+        document.documentElement.dataset.theme = "paper";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="theme.css?v=20260604-theme">
+</head>
+<body class="article">
+  <div class="container">
+
+    <nav class="site-nav" aria-label="站点导航">
+      <a class="site-brand" href="/">blog.shiyao.pro</a>
+      <div class="theme-switcher" aria-label="主题切换">
+        <button class="theme-button" type="button" data-theme-choice="paper" aria-pressed="true">
+          <span class="swatch" style="--swatch: #3157d5"></span>纸白
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="ink" aria-pressed="false">
+          <span class="swatch" style="--swatch: #f0a33a"></span>墨黑
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="signal" aria-pressed="false">
+          <span class="swatch" style="--swatch: #b42318"></span>编辑
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="studio" aria-pressed="false">
+          <span class="swatch" style="--swatch: #0f5f99"></span>工作室
+        </button>
+      </div>
+    </nav>
+
+    <header>
+      <span class="badge">AI · VIDEO · HTML</span>
+      <h1>HTML Video 使用指南<br>用网页技术生成 MP4</h1>
+      <p class="subtitle">把 HTML、CSS、JavaScript 当成视频工程来写：浏览器负责预览，渲染器逐帧输出，最后得到一个可以发到 YouTube、抖音、官网和产品页里的 MP4。</p>
+      <p class="meta">2026-06-05 · shiyao</p>
+    </header>
+
+    <h2>先把概念说清楚</h2>
+    <p>
+      这里说的 <strong>HTML Video</strong>，不是传统意义上的 <code>&lt;video&gt;</code> 标签，也不是把 MP4 嵌进网页。
+      它指的是一种 <strong>HTML-to-video</strong> 工作流：用网页技术写画面、动效、字幕、图表和音频，再把这个网页按时间轴渲染成视频文件。
+    </p>
+    <p>
+      这个方向最近值得关注的工具是 <a href="https://hyperframes.video/">HyperFrames</a>。
+      它的思路很直接：一段普通 HTML 声明画布尺寸、时长、帧率和每个元素的出现时间；开发时像调网页一样实时预览；发布时用 CLI 渲染成 MP4。
+    </p>
+
+    <div class="flow">
+      <div class="flow-item"><span class="emoji">1</span>写 HTML<br><small style="opacity:0.7">画面、文字、组件</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">2</span>加时间<br><small style="opacity:0.7">start / duration / fps</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">3</span>浏览器预览<br><small style="opacity:0.7">逐帧检查</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">4</span>渲染 MP4<br><small style="opacity:0.7">交付 / 发布 / CI</small></div>
+    </div>
+
+    <h2>它适合做什么</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <h4>产品演示视频</h4>
+        <p>把 App 截图、网页界面、功能路径写成可复用模板，每次发布新版本只换素材和文案。</p>
+      </div>
+      <div class="feature">
+        <h4>数据可视化短片</h4>
+        <p>JSON、CSV、API 数据进来，柱状图、排行榜、指标卡按时间动起来，适合周报和运营内容。</p>
+      </div>
+      <div class="feature">
+        <h4>社媒短视频模板</h4>
+        <p>同一份 HTML 输出 16:9、9:16、1:1，多平台只改尺寸和版式约束。</p>
+      </div>
+      <div class="feature">
+        <h4>AI Agent 自动出片</h4>
+        <p>让 Codex / Claude 写 HTML、跑预览、修截图、再渲染，整个过程可以像写代码一样进入版本管理。</p>
+      </div>
+    </div>
+
+    <h2>为什么不用直接录屏</h2>
+    <p>
+      录屏最快，但它很难稳定复现。鼠标抖一下、网络慢一下、系统通知弹一下，视频就要重录。
+      HTML-to-video 的优势是 <strong>视频源文件本质上是代码</strong>：能 diff，能复用，能批量生成，也能放进 CI。
+    </p>
+    <div class="card">
+      <table>
+        <tr><th>方式</th><th>优点</th><th>短板</th></tr>
+        <tr>
+          <td>录屏</td>
+          <td>启动快，真实展示产品</td>
+          <td>难复现，批量化差，字幕和动效后期成本高</td>
+        </tr>
+        <tr>
+          <td>剪辑软件</td>
+          <td>自由度最高，适合复杂创意</td>
+          <td>工程自动化弱，模板化成本高</td>
+        </tr>
+        <tr>
+          <td>HTML Video</td>
+          <td>可编程、可预览、可复现、适合 AI 生成</td>
+          <td>不适合真人实拍和复杂电影级特效</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2>5 分钟跑通第一条视频</h2>
+    <p>
+      按 HyperFrames 官方 Quickstart，最小路径就是装 CLI、初始化工程、预览、渲染。
+      如果只是试水，可以先用它的在线 Playground；要稳定输出 MP4，建议本地或服务器装 CLI。
+    </p>
+
+<pre><code>npm install -g hyperframes
+hyperframes init hello-video
+cd hello-video
+
+# 浏览器预览,支持 live reload 和时间轴控制
+hyperframes preview comp.html
+
+# 渲染成 MP4
+hyperframes render comp.html --out video.mp4</code></pre>
+
+    <p>一个最小 composition 长这样：</p>
+
+<pre><code>&lt;!doctype html&gt;
+&lt;div data-width="1920" data-height="1080" data-duration="5" data-fps="60"&gt;
+  &lt;div data-start="0" data-duration="5" class="bg"&gt;&lt;/div&gt;
+  &lt;h1 data-start="1" data-duration="4" data-fade="in"&gt;
+    Hello, friend.
+  &lt;/h1&gt;
+&lt;/div&gt;</code></pre>
+
+    <p>
+      这段 HTML 里最重要的是四类信息：
+      <code>data-width</code> / <code>data-height</code> 定义画布，
+      <code>data-duration</code> 定义总时长或元素持续时间，
+      <code>data-fps</code> 定义帧率，
+      <code>data-start</code> 定义元素从第几秒开始出现。
+    </p>
+
+    <h2>我建议的项目结构</h2>
+    <p>不要把视频工程写成一个越来越大的 HTML 文件。哪怕只是个人项目，也建议一开始就把素材、数据、脚本分开。</p>
+
+<pre><code>launch-video/
+├── comp.html              # 主 composition
+├── package.json
+├── assets/
+│   ├── screenshots/
+│   ├── logo.svg
+│   └── music.mp3
+├── data/
+│   └── metrics.json
+└── renders/
+    ├── launch-16x9.mp4
+    ├── launch-9x16.mp4
+    └── launch-square.mp4</code></pre>
+
+    <div class="card highlight">
+      <strong>我的默认规则</strong>
+      <ul style="margin-top: 0.6rem; margin-bottom: 0;">
+        <li>一条视频一个目录，避免素材串台。</li>
+        <li>所有关键参数写在 HTML 根节点或配置文件里，不靠口头约定。</li>
+        <li>渲染产物放 <code>renders/</code>，源文件和产物分开。</li>
+        <li>能用真实截图就不用抽象插画，尤其是产品 demo。</li>
+      </ul>
+    </div>
+
+    <h2>给 AI Agent 的提示词模板</h2>
+    <p>
+      HTML Video 最大的增益，是它特别适合交给 AI 编程助手处理。比起“帮我剪一个视频”，更好的说法是把目标拆成规格、分镜、素材和验收条件。
+    </p>
+
+<pre><code>用 HTML-to-video 的方式做一个 25 秒产品发布视频。
+
+规格:
+- 1920x1080, 60fps, H.264 MP4
+- 5 个镜头: 标题、问题、核心功能、结果、CTA
+- 使用 assets/screenshots 里的真实产品截图
+- 字幕必须在安全区内,移动端裁切也能看清
+
+实现:
+- 写 comp.html
+- 用 CSS/JS 做时间轴动画
+- 先启动 preview 检查画面
+- 渲染 video.mp4
+
+验收:
+- 首帧不能黑屏
+- 每个镜头转场不超过 0.5 秒
+- 文案不遮挡产品界面
+- 输出前截图检查 0s / 5s / 10s / 15s / 20s / 24s</code></pre>
+
+    <p>
+      重点是最后的验收条件。AI 很容易把视频做成“看起来有东西动”，但真实可用的视频要看首帧、字幕安全区、转场节奏、品牌露出和最终 CTA。
+    </p>
+
+    <h2>常用命令清单</h2>
+    <div class="card">
+      <table>
+        <tr><th>动作</th><th>命令</th><th>用途</th></tr>
+        <tr>
+          <td>初始化</td>
+          <td><code>hyperframes init hello-video</code></td>
+          <td>生成一个带 <code>comp.html</code> 的新项目</td>
+        </tr>
+        <tr>
+          <td>预览</td>
+          <td><code>hyperframes preview comp.html</code></td>
+          <td>启动本地预览和时间轴控制</td>
+        </tr>
+        <tr>
+          <td>检查</td>
+          <td><code>hyperframes lint comp.html</code></td>
+          <td>提前发现时长、属性、资源引用问题</td>
+        </tr>
+        <tr>
+          <td>查看信息</td>
+          <td><code>hyperframes inspect comp.html</code></td>
+          <td>输出时长、fps、轨道和依赖信息</td>
+        </tr>
+        <tr>
+          <td>渲染</td>
+          <td><code>hyperframes render comp.html --out video.mp4</code></td>
+          <td>输出最终 MP4</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2>实战注意事项</h2>
+    <div class="pitfall">
+      <span class="label">坑 1 · 把网页动画当视频动画</span>
+      <p style="margin: 0;">
+        网页动画可以“差不多顺”，视频不行。关键节点要按秒或帧设计：第几秒出现标题、第几秒进入截图、第几秒 CTA 停住，都要明确。
+      </p>
+    </div>
+
+    <div class="pitfall">
+      <span class="label">坑 2 · 素材没有固定尺寸</span>
+      <p style="margin: 0;">
+        产品截图、头像、图标最好先统一尺寸或写死容器比例。否则同一套模板换素材后，画面会跳、文字会挤、裁切会乱。
+      </p>
+    </div>
+
+    <div class="pitfall">
+      <span class="label">坑 3 · 忘了音频版权</span>
+      <p style="margin: 0;">
+        HTML 里引用音乐很容易，但发布到公开平台前要确认授权。内部 demo 可以快，公开发布不能随便拿一段 BGM。
+      </p>
+    </div>
+
+    <div class="pitfall">
+      <span class="label">坑 4 · 只看预览不看产物</span>
+      <p style="margin: 0;">
+        最终判断以渲染出来的 MP4 为准。导出后至少检查首帧、末帧、字幕、音量、黑边、码率和目标平台的裁切效果。
+      </p>
+    </div>
+
+    <h2>什么时候该选它</h2>
+    <p>我的判断很简单：</p>
+    <ul>
+      <li>如果视频内容来自数据、截图、文案、模板，选 HTML Video。</li>
+      <li>如果要一周批量出几十条不同版本，选 HTML Video。</li>
+      <li>如果要 AI 直接参与生产和修改，选 HTML Video。</li>
+      <li>如果是真人口播、复杂合成、电影级调色，还是用传统剪辑软件。</li>
+    </ul>
+
+    <h2>参考资料</h2>
+    <ul>
+      <li><a href="https://hyperframes.video/">HyperFrames 官网</a>：HTML-to-video 的产品介绍和适用场景。</li>
+      <li><a href="https://hyperframes.video/docs/getting-started/quickstart">HyperFrames Quickstart</a>：安装、初始化、预览和渲染 MP4 的最短路径。</li>
+      <li><a href="https://hyperframes.video/docs/workflow/cli-reference">HyperFrames CLI reference</a>：CLI 命令、JSON 输出模式和退出码。</li>
+      <li><a href="https://github.com/heygen-com/hyperframes">heygen-com/hyperframes</a>：开源仓库。</li>
+    </ul>
+
+    <footer>
+      <p>© 2026 shiyao · <a href="https://blog.shiyao.pro">blog.shiyao.pro</a> · 由 Claude Code 协助撰写</p>
+    </footer>
+
+  </div>
+  <script>
+    (() => {
+      const storageKey = "blog-shiyao-theme";
+      const themes = new Set(["paper", "ink", "signal", "studio"]);
+      const buttons = [...document.querySelectorAll("[data-theme-choice]")];
+      const setTheme = (theme) => {
+        const nextTheme = themes.has(theme) ? theme : "paper";
+        document.documentElement.dataset.theme = nextTheme;
+        try {
+          localStorage.setItem(storageKey, nextTheme);
+        } catch {}
+        buttons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.themeChoice === nextTheme));
+        });
+      };
+
+      let initialTheme = "paper";
+      try {
+        initialTheme = localStorage.getItem(storageKey) || "paper";
+      } catch {}
+      setTheme(initialTheme);
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setTheme(button.dataset.themeChoice));
+      });
+    })();
+  </script>
+</body>
+</html>
