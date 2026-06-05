@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HTML Video 使用指南：用网页技术生成 MP4 — blog.shiyao.pro</title>
-  <meta name="description" content="HTML Video 不是在网页里播放视频，而是把 HTML、CSS、JavaScript 当成视频工程：写一个可预览的网页，再用 HyperFrames 这类 HTML-to-video 工具渲染成 MP4。">
+  <title>html-video 使用指南：Agent 写 HTML，本地导出 MP4 — blog.shiyao.pro</title>
+  <meta name="description" content="结合 nexu-io/html-video 开源项目重写 HTML Video 工作流：Agent 读取链接或仓库，生成 content-graph 和多帧 HTML，HyperFrames 渲染，ffmpeg 导出 MP4，可选 MiniMax 配音配乐。">
   <script>
     (() => {
       try {
@@ -40,29 +40,57 @@
 
     <header>
       <span class="badge">AI · VIDEO · HTML</span>
-      <h1>HTML Video 使用指南<br>用网页技术生成 MP4</h1>
-      <p class="subtitle">把 HTML、CSS、JavaScript 当成视频工程来写：浏览器负责预览，渲染器逐帧输出，最后得到一个可以发到 YouTube、抖音、官网和产品页里的 MP4。</p>
+      <h1>html-video 使用指南<br>Agent 写 HTML，本地导出 MP4</h1>
+      <p class="subtitle">结合 Tom Huang 开源的 nexu-io/html-video，把“HTML-to-video”从底层渲染能力升级成一套 Agent 可直接使用的视频制作工作流：模板、分页编辑、文章/Repo 输入、配音配乐和 MP4 导出都放到一个本地 Studio 里。</p>
       <p class="meta">2026-06-05 · shiyao</p>
     </header>
 
-    <h2>先把概念说清楚</h2>
+    <h2>先把概念修正一下</h2>
     <p>
       这里说的 <strong>HTML Video</strong>，不是传统意义上的 <code>&lt;video&gt;</code> 标签，也不是把 MP4 嵌进网页。
       它指的是一种 <strong>HTML-to-video</strong> 工作流：用网页技术写画面、动效、字幕、图表和音频，再把这个网页按时间轴渲染成视频文件。
     </p>
     <p>
-      这个方向最近值得关注的工具是 <a href="https://hyperframes.video/">HyperFrames</a>。
-      它的思路很直接：一段普通 HTML 声明画布尺寸、时长、帧率和每个元素的出现时间；开发时像调网页一样实时预览；发布时用 CLI 渲染成 MP4。
+      但只说 HyperFrames 还不够准确。HyperFrames 更像底层渲染引擎：HTML + CSS + GSAP 进来，Headless Chromium 逐帧录制，ffmpeg 编码成视频。
+      <a href="https://github.com/nexu-io/html-video">html-video</a> 则是站在它上面的 <strong>Agent meta-layer</strong>：
+      Agent 读文章、读 GitHub repo、挑模板、生成分镜和每帧 HTML，Studio 负责预览、分页编辑、音频和导出。
     </p>
 
     <div class="flow">
-      <div class="flow-item"><span class="emoji">1</span>写 HTML<br><small style="opacity:0.7">画面、文字、组件</small></div>
+      <div class="flow-item"><span class="emoji">1</span>输入材料<br><small style="opacity:0.7">prompt / link / repo</small></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-item"><span class="emoji">2</span>加时间<br><small style="opacity:0.7">start / duration / fps</small></div>
+      <div class="flow-item"><span class="emoji">2</span>Agent 分镜<br><small style="opacity:0.7">content-graph</small></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-item"><span class="emoji">3</span>浏览器预览<br><small style="opacity:0.7">逐帧检查</small></div>
+      <div class="flow-item"><span class="emoji">3</span>多帧 HTML<br><small style="opacity:0.7">模板 + 内容</small></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-item"><span class="emoji">4</span>渲染 MP4<br><small style="opacity:0.7">交付 / 发布 / CI</small></div>
+      <div class="flow-item"><span class="emoji">4</span>导出 MP4<br><small style="opacity:0.7">Chromium + ffmpeg</small></div>
+    </div>
+
+    <h2>这条 X 文档带来的关键更新</h2>
+    <p>
+      Tom Huang 在 X 上正式宣布开源 html-video，定位很明确：<strong>HTML 版剪映</strong>。
+      它不是又一个单纯的渲染 CLI，而是让 Claude Code、Codex、Cursor、Hermes 等本地 Coding Agent 能“写 HTML 做视频”的工作台。
+    </p>
+    <div class="card">
+      <table>
+        <tr><th>原来我文章里的理解</th><th>现在应该改成</th></tr>
+        <tr>
+          <td>HTML Video = 直接写 HyperFrames composition</td>
+          <td>HTML Video = Agent meta-layer + 模板库 + Studio + 渲染引擎，HyperFrames 是当前已接好的默认引擎。</td>
+        </tr>
+        <tr>
+          <td>重点是写一个 HTML 文件</td>
+          <td>重点是把文章、链接、Repo 或 prompt 变成 content-graph，再拆成多帧可编辑 HTML。</td>
+        </tr>
+        <tr>
+          <td>音频靠自己后期处理</td>
+          <td>html-video 已支持通过 MiniMax 生成背景音乐和旁白，并在导出时用 ffmpeg 混进 MP4。</td>
+        </tr>
+        <tr>
+          <td>模板自己找、自己改</td>
+          <td>项目内置 21 套 license-clean 模板，并用 manifest 描述适用场景、输入 schema、授权和输出规格。</td>
+        </tr>
+      </table>
     </div>
 
     <h2>它适合做什么</h2>
@@ -111,91 +139,104 @@
       </table>
     </div>
 
-    <h2>5 分钟跑通第一条视频</h2>
+    <h2>核心 Pipeline</h2>
     <p>
-      按 HyperFrames 官方 Quickstart，最小路径就是装 CLI、初始化工程、预览、渲染。
-      如果只是试水，可以先用它的在线 Playground；要稳定输出 MP4，建议本地或服务器装 CLI。
+      html-video 的 README 把流程说得很清楚：一句话、一个链接或一个 GitHub repo 进去，最终输出一个真实 MP4。
+      中间最关键的是 content-graph，它把“文章重点、因果关系、对比关系、镜头顺序和 timing”变成 Agent 与渲染引擎之间的中间层。
     </p>
 
-<pre><code>npm install -g hyperframes
-hyperframes init hello-video
-cd hello-video
+<pre><code>prompt / link / repo
+  ↓
+source fetch
+  # 服务端抓取文章或 GitHub repo, 展平成 Markdown
+  ↓
+agent loop
+  # 本地 Agent 读取材料 + 模板说明, 生成 storyboard
+  ↓
+content-graph
+  # 多帧 IR: nodes + edges + sequence + timing
+  ↓
+per-frame HTML
+  # 每个节点变成一个自包含 animated HTML frame
+  ↓
+HyperFrames render
+  # Headless Chromium 录制每帧动画, 生成 webm
+  ↓
+ffmpeg
+  # webm 转 mp4, 拼接, 可选混入 MiniMax 音乐和旁白
+  ↓
+your.mp4</code></pre>
 
-# 浏览器预览,支持 live reload 和时间轴控制
-hyperframes preview comp.html
-
-# 渲染成 MP4
-hyperframes render comp.html --out video.mp4</code></pre>
-
-    <p>一个最小 composition 长这样：</p>
-
-<pre><code>&lt;!doctype html&gt;
-&lt;div data-width="1920" data-height="1080" data-duration="5" data-fps="60"&gt;
-  &lt;div data-start="0" data-duration="5" class="bg"&gt;&lt;/div&gt;
-  &lt;h1 data-start="1" data-duration="4" data-fade="in"&gt;
-    Hello, friend.
-  &lt;/h1&gt;
-&lt;/div&gt;</code></pre>
-
+    <h2>5 分钟跑通 html-video</h2>
     <p>
-      这段 HTML 里最重要的是四类信息：
-      <code>data-width</code> / <code>data-height</code> 定义画布，
-      <code>data-duration</code> 定义总时长或元素持续时间，
-      <code>data-fps</code> 定义帧率，
-      <code>data-start</code> 定义元素从第几秒开始出现。
+      如果你要体验的是 Tom 这次开源的 html-video，而不是单独使用 HyperFrames，入口应该走它的本地 Studio。
+      官方 README 的最短路径如下：
     </p>
 
-    <h2>我建议的项目结构</h2>
-    <p>不要把视频工程写成一个越来越大的 HTML 文件。哪怕只是个人项目，也建议一开始就把素材、数据、脚本分开。</p>
+<pre><code>git clone https://github.com/nexu-io/html-video.git
+cd html-video
+pnpm install
+pnpm -r build
 
-<pre><code>launch-video/
-├── comp.html              # 主 composition
-├── package.json
-├── assets/
-│   ├── screenshots/
-│   ├── logo.svg
-│   └── music.mp3
-├── data/
-│   └── metrics.json
-└── renders/
-    ├── launch-16x9.mp4
-    ├── launch-9x16.mp4
-    └── launch-square.mp4</code></pre>
+# 打开本地 Studio: http://127.0.0.1:3071
+node packages/cli/dist/bin.js studio</code></pre>
+
+    <p>
+      打开 Studio 后，你可以直接描述视频、粘贴文章链接、粘贴 GitHub repo，或者选择模板后让 Agent 填内容。
+      Studio 会检测本地可用 Agent：Open Design / Claude Code / Cursor Agent / Codex CLI / Hermes；
+      如果没有装 CLI，也可以用 Anthropic Messages API BYOK。
+    </p>
+
+    <h2>项目架构</h2>
+    <p>html-video 的目录结构体现了它的定位：不是单一 renderer，而是 Studio、Agent runtime、模板、content-graph 和引擎 adapter 的组合。</p>
+
+<pre><code>packages/
+├── core/                  # Project / Asset / ContentGraph / orchestrator
+├── content-graph/         # 多帧 storyboard IR: nodes + edges + topo-sort
+├── runtime/               # Agent runtime: Claude / Cursor / Codex / Hermes / API
+├── adapter-hyperframes/   # 当前已接入的渲染引擎: Chromium + ffmpeg
+├── cli/                   # html-video 命令、本地 Studio、source fetching
+└── project-studio/        # 浏览器 UI: chat / templates / frames / soundtrack / export
+
+templates/                 # 21 套 curated video templates
+research/                  # adapter / metadata / agent skill / content-graph RFC</code></pre>
 
     <div class="card highlight">
       <strong>我的默认规则</strong>
       <ul style="margin-top: 0.6rem; margin-bottom: 0;">
-        <li>一条视频一个目录，避免素材串台。</li>
-        <li>所有关键参数写在 HTML 根节点或配置文件里，不靠口头约定。</li>
-        <li>渲染产物放 <code>renders/</code>，源文件和产物分开。</li>
-        <li>能用真实截图就不用抽象插画，尤其是产品 demo。</li>
+        <li>不要让 Agent 从零发明风格，优先让它选一个模板 manifest。</li>
+        <li>文章 / Repo 视频先生成 content-graph，再改每帧文案，别直接改最终 MP4。</li>
+        <li>把音频当成导出阶段的一部分：旁白、BGM、ducking、fade 都应该可复现。</li>
+        <li>如果只做单镜头标题卡，可以走 single-frame fast path；多段解说要走 content-graph。</li>
       </ul>
     </div>
 
     <h2>给 AI Agent 的提示词模板</h2>
     <p>
-      HTML Video 最大的增益，是它特别适合交给 AI 编程助手处理。比起“帮我剪一个视频”，更好的说法是把目标拆成规格、分镜、素材和验收条件。
+      html-video 最大的增益，是把“写视频”变成 Agent 能理解的工程任务。比起“帮我剪一个视频”，更好的提示词是给出素材来源、目标受众、模板偏好、镜头数量、音频要求和验收条件。
     </p>
 
-<pre><code>用 HTML-to-video 的方式做一个 25 秒产品发布视频。
+<pre><code>用 html-video 做一个 30 秒产品发布视频。
 
 规格:
 - 1920x1080, 60fps, H.264 MP4
-- 5 个镜头: 标题、问题、核心功能、结果、CTA
-- 使用 assets/screenshots 里的真实产品截图
-- 字幕必须在安全区内,移动端裁切也能看清
+- 输入材料: https://github.com/example/project
+- 选择适合产品发布的多帧模板
+- 5 个 frames: 标题、痛点、核心功能、真实界面、CTA
+- 需要旁白和轻量背景音乐
 
 实现:
-- 写 comp.html
-- 用 CSS/JS 做时间轴动画
-- 先启动 preview 检查画面
-- 渲染 video.mp4
+- 先把 repo README 和目录结构转成 content-graph
+- 每帧文案都要能追溯到 repo 里的真实信息
+- 生成 per-frame HTML 后让我在 Studio 里编辑确认
+- 最后导出 MP4
 
 验收:
 - 首帧不能黑屏
-- 每个镜头转场不超过 0.5 秒
-- 文案不遮挡产品界面
-- 输出前截图检查 0s / 5s / 10s / 15s / 20s / 24s</code></pre>
+- 字幕不能遮挡产品 UI
+- CTA 停留至少 3 秒
+- 背景音乐要 duck 在旁白下面
+- 导出前检查每个 frame 的文案和 timing</code></pre>
 
     <p>
       重点是最后的验收条件。AI 很容易把视频做成“看起来有东西动”，但真实可用的视频要看首帧、字幕安全区、转场节奏、品牌露出和最终 CTA。
@@ -206,29 +247,29 @@ hyperframes render comp.html --out video.mp4</code></pre>
       <table>
         <tr><th>动作</th><th>命令</th><th>用途</th></tr>
         <tr>
-          <td>初始化</td>
-          <td><code>hyperframes init hello-video</code></td>
-          <td>生成一个带 <code>comp.html</code> 的新项目</td>
+          <td>启动 Studio</td>
+          <td><code>node packages/cli/dist/bin.js studio</code></td>
+          <td>打开本地浏览器工作台，聊天生成、选模板、编辑 frames、导出 MP4</td>
         </tr>
         <tr>
-          <td>预览</td>
-          <td><code>hyperframes preview comp.html</code></td>
-          <td>启动本地预览和时间轴控制</td>
+          <td>检测环境</td>
+          <td><code>node packages/cli/dist/bin.js doctor</code></td>
+          <td>检测本地 Agent 和渲染引擎是否可用</td>
         </tr>
         <tr>
-          <td>检查</td>
-          <td><code>hyperframes lint comp.html</code></td>
-          <td>提前发现时长、属性、资源引用问题</td>
+          <td>搜索模板</td>
+          <td><code>node packages/cli/dist/bin.js search-templates --intent "product launch" --top 3</code></td>
+          <td>按意图匹配合适模板，降低 Agent 从零设计的随机性</td>
         </tr>
         <tr>
-          <td>查看信息</td>
-          <td><code>hyperframes inspect comp.html</code></td>
-          <td>输出时长、fps、轨道和依赖信息</td>
+          <td>构建项目</td>
+          <td><code>pnpm -r build</code></td>
+          <td>构建 core、runtime、adapter、CLI 和 Studio UI</td>
         </tr>
         <tr>
-          <td>渲染</td>
-          <td><code>hyperframes render comp.html --out video.mp4</code></td>
-          <td>输出最终 MP4</td>
+          <td>底层渲染</td>
+          <td><code>HyperFrames + Headless Chromium + ffmpeg</code></td>
+          <td>当前已接好的默认 engine adapter，最终输出真实 MP4</td>
         </tr>
       </table>
     </div>
@@ -265,14 +306,16 @@ hyperframes render comp.html --out video.mp4</code></pre>
     <h2>什么时候该选它</h2>
     <p>我的判断很简单：</p>
     <ul>
-      <li>如果视频内容来自数据、截图、文案、模板，选 HTML Video。</li>
-      <li>如果要一周批量出几十条不同版本，选 HTML Video。</li>
-      <li>如果要 AI 直接参与生产和修改，选 HTML Video。</li>
+      <li>如果视频内容来自文章、GitHub repo、数据、截图、文案、模板，选 html-video。</li>
+      <li>如果你希望本地 Agent 直接参与生产和修改，选 html-video。</li>
+      <li>如果你只需要一个极简 HTML composition，直接用 HyperFrames 也够。</li>
       <li>如果是真人口播、复杂合成、电影级调色，还是用传统剪辑软件。</li>
     </ul>
 
     <h2>参考资料</h2>
     <ul>
+      <li><a href="https://x.com/tuturetom/status/2062470358687498470">Tom Huang 的 html-video 开源说明</a>：X 原文，介绍“HTML 版剪映”、Agent 接入、模板、分页编辑和 MP4 导出。</li>
+      <li><a href="https://github.com/nexu-io/html-video">nexu-io/html-video</a>：开源仓库，包含 pipeline、架构、模板、Agent runtime、MiniMax 音频和 CLI 用法。</li>
       <li><a href="https://hyperframes.video/">HyperFrames 官网</a>：HTML-to-video 的产品介绍和适用场景。</li>
       <li><a href="https://hyperframes.video/docs/getting-started/quickstart">HyperFrames Quickstart</a>：安装、初始化、预览和渲染 MP4 的最短路径。</li>
       <li><a href="https://hyperframes.video/docs/workflow/cli-reference">HyperFrames CLI reference</a>：CLI 命令、JSON 输出模式和退出码。</li>
