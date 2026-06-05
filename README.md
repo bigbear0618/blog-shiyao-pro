@@ -56,6 +56,12 @@ python3 scripts/generate-ai-daily.py
 python3 scripts/local-image-helper
 ```
 
+服务器部署时，页面默认请求同域 HTTPS 接口 `/ai-image/generate-image`，由 nginx 反代到本机 helper。公网访问必须填写 token，token 存在服务器本地：
+
+```bash
+cat .local-ai-images/image-token
+```
+
 默认 helper 会调用本机 `codex exec`，要求 Codex 把图片保存成 PNG。若本地 Codex 没有生图工具，可用 `AI_IMAGE_COMMAND` 接自己的生图 CLI：
 
 ```bash

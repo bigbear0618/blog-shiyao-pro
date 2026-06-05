@@ -18,6 +18,7 @@ node_modules/
 out/
 dist/
 .local-ai-images/
+logs/
 __pycache__/
 */__pycache__/
 

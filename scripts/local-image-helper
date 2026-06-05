@@ -30,6 +30,8 @@ PORT = int(os.environ.get("AI_IMAGE_HELPER_PORT", "8787"))
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = Path(os.environ.get("AI_IMAGE_OUTPUT_DIR", ROOT / ".local-ai-images")).expanduser()
 TIMEOUT = int(os.environ.get("AI_IMAGE_TIMEOUT", "900"))
+TOKEN = os.environ.get("AI_IMAGE_TOKEN", "").strip()
+PUBLIC_BASE = os.environ.get("AI_IMAGE_PUBLIC_BASE", "/ai-image").rstrip("/")
 
 
 def safe_name() -> str:
@@ -85,6 +87,9 @@ class Handler(BaseHTTPRequestHandler):
             self.json(200, {"ok": True})
             return
         if parsed.path.startswith("/images/"):
+            if not self.authorized(parsed):
+                self.json(401, {"ok": False, "error": "unauthorized"})
+                return
             name = Path(parsed.path).name
             image = OUT_DIR / name
             if not image.exists():
@@ -102,6 +107,9 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path != "/generate-image":
             self.json(404, {"ok": False, "error": "not found"})
+            return
+        if not self.authorized(parsed):
+            self.json(401, {"ok": False, "error": "unauthorized"})
             return
         length = int(self.headers.get("Content-Length", "0"))
         if length > 20000:
@@ -141,8 +149,15 @@ class Handler(BaseHTTPRequestHandler):
         self.json(200, {
             "ok": True,
             "filename": filename,
-            "image_url": f"http://{HOST}:{PORT}/images/{filename}",
+            "image_url": image_url(filename),
         })
+
+    def authorized(self, parsed: urllib.parse.ParseResult) -> bool:
+        if not TOKEN:
+            return True
+        query = urllib.parse.parse_qs(parsed.query)
+        supplied = self.headers.get("X-Image-Token", "") or (query.get("token", [""])[0])
+        return supplied == TOKEN
 
     def json(self, status: int, payload: dict) -> None:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -156,11 +171,18 @@ class Handler(BaseHTTPRequestHandler):
         print(f"{self.address_string()} - {fmt % args}")
 
 
+def image_url(filename: str) -> str:
+    if TOKEN:
+        return f"{PUBLIC_BASE}/images/{filename}?token={urllib.parse.quote(TOKEN)}"
+    return f"{PUBLIC_BASE}/images/{filename}"
+
+
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"AI image helper listening on http://{HOST}:{PORT}")
     print(f"output dir: {OUT_DIR}")
+    print(f"token auth: {'enabled' if TOKEN else 'disabled'}")
     print("open https://blog.shiyao.pro/ai-daily and submit a prompt")
     server.serve_forever()
     return 0

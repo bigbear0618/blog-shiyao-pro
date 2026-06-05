@@ -577,10 +577,14 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
           </div>
           <div class="field">
             <label for="helperUrl">本地 helper 地址</label>
-            <input id="helperUrl" value="http://127.0.0.1:8787/generate-image">
+            <input id="helperUrl" value="/ai-image/generate-image">
+          </div>
+          <div class="field">
+            <label for="imageToken">访问 Token</label>
+            <input id="imageToken" type="password" placeholder="服务器部署时需要填写">
           </div>
           <button id="generateBtn" type="button">生成图片</button>
-          <div class="status" id="imageStatus">先在本机运行：<code>python3 scripts/local-image-helper</code></div>
+          <div class="status" id="imageStatus">服务器已部署时使用同域地址；本机调试可改成 <code>http://127.0.0.1:8787/generate-image</code></div>
           <div class="preview" id="imagePreview">生成后图片会显示在这里</div>
         </div>
       </section>
@@ -597,6 +601,7 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
     const preview = document.getElementById("imagePreview");
     const promptEl = document.getElementById("imagePrompt");
     const helperEl = document.getElementById("helperUrl");
+    const tokenEl = document.getElementById("imageToken");
 
     btn.addEventListener("click", async () => {{
       const prompt = promptEl.value.trim();
@@ -610,9 +615,14 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
       preview.textContent = "生成中...";
 
       try {{
+        const headers = {{ "Content-Type": "application/json" }};
+        const token = tokenEl.value.trim();
+        if (token) {{
+          headers["X-Image-Token"] = token;
+        }}
         const response = await fetch(helperEl.value.trim(), {{
           method: "POST",
-          headers: {{ "Content-Type": "application/json" }},
+          headers,
           body: JSON.stringify({{ prompt }})
         }});
         const data = await response.json();
