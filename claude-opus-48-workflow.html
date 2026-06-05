@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Opus 4.8 Workflow 原理：动态工作流、架构图与代码逻辑 — blog.shiyao.pro</title>
+  <meta name="description" content="拆解 Claude Opus 4.8 在 Claude Code 和 API 里的 workflow 原理：adaptive thinking、effort、动态工作流、并行 subagents、验证循环、架构图和可复刻的调度伪代码。">
+  <script>
+    (() => {
+      try {
+        const theme = localStorage.getItem("blog-shiyao-theme") || "paper";
+        document.documentElement.dataset.theme = theme;
+      } catch {
+        document.documentElement.dataset.theme = "paper";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="theme.css?v=20260604-theme">
+</head>
+<body class="article">
+  <div class="container">
+
+    <nav class="site-nav" aria-label="站点导航">
+      <a class="site-brand" href="/">blog.shiyao.pro</a>
+      <div class="theme-switcher" aria-label="主题切换">
+        <button class="theme-button" type="button" data-theme-choice="paper" aria-pressed="true">
+          <span class="swatch" style="--swatch: #3157d5"></span>纸白
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="ink" aria-pressed="false">
+          <span class="swatch" style="--swatch: #f0a33a"></span>墨黑
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="signal" aria-pressed="false">
+          <span class="swatch" style="--swatch: #b42318"></span>编辑
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="studio" aria-pressed="false">
+          <span class="swatch" style="--swatch: #0f5f99"></span>工作室
+        </button>
+      </div>
+    </nav>
+
+    <header>
+      <span class="badge">CLAUDE · AGENTS · WORKFLOW</span>
+      <h1>Claude Opus 4.8 Workflow 原理<br>动态工作流、架构图与代码逻辑</h1>
+      <p class="subtitle">Opus 4.8 不只是“更聪明的模型”，更关键的是它把长任务、工具调用、上下文管理和并行子代理编排推到了一个更适合工程落地的形态。</p>
+      <p class="meta">2026-06-05 · shiyao</p>
+    </header>
+
+    <h2>先确认版本事实</h2>
+    <p>
+      Anthropic 在 2026-05-28 发布了 <strong>Claude Opus 4.8</strong>，API model ID 是 <code>claude-opus-4-8</code>。
+      官方把它定位为面向复杂推理、长周期 agentic coding 和高自治工作的通用可用 Opus 模型。
+    </p>
+    <p>
+      跟 workflow 最相关的几个点是：默认 1M token context window（Microsoft Foundry 是 200k）、
+      128k max output tokens、adaptive thinking、effort 控制、fast mode、mid-conversation system messages，
+      以及 Claude Code 里的 <strong>dynamic workflows</strong>。
+    </p>
+
+    <div class="card">
+      <table>
+        <tr><th>能力点</th><th>对 workflow 的意义</th></tr>
+        <tr>
+          <td><code>adaptive thinking</code></td>
+          <td>让模型按每一步任务复杂度决定是否深入思考，长任务不用每个小步骤都浪费 thinking tokens。</td>
+        </tr>
+        <tr>
+          <td><code>effort</code></td>
+          <td>用 <code>low / medium / high / xhigh / max</code> 控制响应、工具调用和思考的 token 开销。</td>
+        </tr>
+        <tr>
+          <td>mid-conversation system messages</td>
+          <td>长循环中可追加权限、预算、环境变化，不必重写整段系统提示，从而保留 prompt cache 命中。</td>
+        </tr>
+        <tr>
+          <td>dynamic workflows</td>
+          <td>Claude Code 可让 Claude 动态写编排脚本，把任务拆成大量并行 subagents，再做验证和汇总。</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2>Workflow 到底解决什么问题</h2>
+    <p>
+      单代理模式适合“小步快跑”：读文件、改一处、跑测试、汇报。但当任务变成“扫完整个代码库找安全问题”、
+      “把几百个文件从旧 API 迁到新 API”、“并行验证多个方案”时，单代理会遇到三个瓶颈：
+    </p>
+    <ul>
+      <li><strong>时间瓶颈</strong>：所有文件和假设串行处理，等待时间线性增长。</li>
+      <li><strong>注意力瓶颈</strong>：上下文越来越长，模型需要不断压缩、回忆、恢复任务边界。</li>
+      <li><strong>验证瓶颈</strong>：同一个代理既提出方案又验证方案，容易漏掉自己的错误。</li>
+    </ul>
+    <p>
+      Dynamic workflow 的核心就是把“大任务”改造成“主控代理 + 多个独立子代理 + 验证代理 + 汇总器”的执行图。
+      主控代理负责计划和约束，子代理并行探索，验证代理从反方向挑错，最后把可采信结果折叠回一个答复或 PR。
+    </p>
+
+    <h2>架构图 1：普通 Claude Code agent loop</h2>
+    <div class="flow">
+      <div class="flow-item"><span class="emoji">1</span>用户目标<br><small style="opacity:0.7">issue / prompt / task</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">2</span>Opus 4.8<br><small style="opacity:0.7">plan / reason</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">3</span>工具调用<br><small style="opacity:0.7">read / edit / test / git</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">4</span>结果验证<br><small style="opacity:0.7">tests / diff / review</small></div>
+    </div>
+
+<pre><code>flowchart LR
+  U["User task"] --&gt; M["Claude Opus 4.8"]
+  M --&gt; P["Plan next step"]
+  P --&gt; T["Call tools: read/edit/test/git"]
+  T --&gt; O["Observe output"]
+  O --&gt; M
+  M --&gt; R["Final answer or patch"]</code></pre>
+
+    <p>
+      这是我们每天在 Claude Code 里看到的普通 agent loop。它的好处是状态清晰、交互快；
+      但大任务只靠这个 loop，会把所有探索、修改、验证都挤在一条执行线上。
+    </p>
+
+    <h2>架构图 2：Dynamic workflow fan-out / fan-in</h2>
+    <div class="flow">
+      <div class="flow-item"><span class="emoji">1</span>主控 Claude<br><small style="opacity:0.7">拆任务 / 定验收</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">2</span>编排脚本<br><small style="opacity:0.7">queue / budgets / shards</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">3</span>并行 subagents<br><small style="opacity:0.7">独立搜索 / 修改 / 分析</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><span class="emoji">4</span>验证与汇总<br><small style="opacity:0.7">refute / test / synthesize</small></div>
+    </div>
+
+<pre><code>flowchart TB
+  U["User: migrate / audit / investigate"] --&gt; C["Coordinator: Opus 4.8"]
+  C --&gt; S["Workflow spec: scope, shards, budgets, checks"]
+  S --&gt; Q["Orchestration script / job queue"]
+  Q --&gt; A1["Subagent A: package 1"]
+  Q --&gt; A2["Subagent B: package 2"]
+  Q --&gt; A3["Subagent C: package 3"]
+  A1 --&gt; V["Verification agents"]
+  A2 --&gt; V
+  A3 --&gt; V
+  V --&gt; F["Fix loop: build / test / lint"]
+  F --&gt; C
+  C --&gt; R["Single coordinated answer / PR"]</code></pre>
+
+    <p>
+      Anthropic 的描述是：workflow 启动后，Claude 会基于 prompt 动态规划，把工作拆成子任务并并行分发给 subagents；
+      结果先被检查，再折叠回主控答案。工程上看，这就是经典的 <strong>fan-out / fan-in</strong>：先分片并行，再验证合并。
+    </p>
+
+    <h2>运行时管线：从 prompt 到结果</h2>
+    <div class="card">
+      <ol>
+        <li><strong>Intent classification</strong>：判断这是普通 agent loop 还是需要 workflow 的长任务。</li>
+        <li><strong>Scope lock</strong>：确定代码库、目录、预算、权限、测试命令和不可触碰边界。</li>
+        <li><strong>Plan synthesis</strong>：主控模型生成任务分解、验收标准和并行分片策略。</li>
+        <li><strong>Subagent dispatch</strong>：每个子代理拿到独立 shard、目标和可用工具，互不共享未验证结论。</li>
+        <li><strong>Independent verification</strong>：验证代理复查发现、反驳假设、跑测试或要求补证据。</li>
+        <li><strong>Fix loop</strong>：把失败项重新排队，直到构建、测试、lint 或人工定义的 bar 通过。</li>
+        <li><strong>Synthesis</strong>：主控模型把可采信结果汇总成补丁、报告、PR 描述或下一步计划。</li>
+      </ol>
+    </div>
+
+    <h2>核心调度伪代码</h2>
+    <p>
+      下面不是 Anthropic 的内部实现，而是从官方描述抽象出来的工程形态。你自己用 Claude API、队列和 sandbox 也能复刻类似结构。
+    </p>
+
+<pre><code>async function runWorkflow(task, repo) {
+  const coordinator = createClaude({
+    model: "claude-opus-4-8",
+    thinking: { type: "adaptive" },
+    output_config: { effort: "xhigh" }
+  });
+
+  const spec = await coordinator.plan({
+    task,
+    constraints: {
+      repo,
+      maxWallClock: "6h",
+      requireTests: true,
+      allowedTools: ["read", "search", "edit", "bash", "git"]
+    }
+  });
+
+  const shards = splitWork(spec); // by package, directory, file group, or hypothesis
+  const findings = await parallelMap(shards, async (shard) =&gt; {
+    const worker = createSubagent({
+      model: "claude-opus-4-8",
+      effort: shard.isHard ? "xhigh" : "medium",
+      sandbox: createIsolatedWorkspace(repo)
+    });
+
+    return worker.run({
+      objective: shard.objective,
+      evidenceRequired: true,
+      outputSchema: "finding | patch | no_issue"
+    });
+  });
+
+  const verified = await parallelMap(findings, async (finding) =&gt; {
+    return verifyFinding({
+      finding,
+      tests: spec.tests,
+      adversarialReview: true
+    });
+  });
+
+  const patch = await coordinator.synthesize({
+    verified,
+    rejectUnprovenClaims: true,
+    finalBar: "tests pass and diff is minimal"
+  });
+
+  return patch;
+}</code></pre>
+
+    <h2>API 请求形态</h2>
+    <p>
+      Opus 4.8 的 API workflow 重点不是“换个模型名”这么简单。迁移时要同时处理 thinking、effort、sampling 参数和中途系统消息。
+    </p>
+
+<pre><code>import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const message = await client.messages.create({
+  model: "claude-opus-4-8",
+  max_tokens: 16000,
+  thinking: { type: "adaptive" },
+  output_config: { effort: "xhigh" },
+  system: [
+    {
+      type: "text",
+      text: "You are a careful engineering workflow coordinator. Verify before reporting."
+    }
+  ],
+  messages: [
+    {
+      role: "user",
+      content: "Analyze this migration plan and produce executable shards."
+    }
+  ]
+});</code></pre>
+
+    <p>几个要点：</p>
+    <ul>
+      <li><code>thinking: { type: "adaptive" }</code> 是 Opus 4.8 支持的 thinking 模式；旧的固定 <code>budget_tokens</code> 不适用。</li>
+      <li><code>output_config.effort</code> 才是控制深度、工具调用积极性和 token 开销的主旋钮。</li>
+      <li>不要再依赖自定义 <code>temperature</code>、<code>top_p</code>、<code>top_k</code>；Opus 4.7 以后这些非默认采样参数会被拒绝。</li>
+      <li>长任务中可用 mid-conversation system message 更新权限、预算或环境，不必重放全部历史。</li>
+    </ul>
+
+    <h2>中途系统消息：长任务的控制面</h2>
+    <p>
+      这是 Opus 4.8 workflow 很实用的一点。过去长 agent loop 里，如果你想告诉模型“测试预算只剩 20 分钟”、
+      “现在禁止改数据库迁移文件”、“CI 新失败是 flaky”，常见做法是把新约束塞进 user message。
+      现在可以在 messages array 里按规则追加 system entry，让它成为控制面更新。
+    </p>
+
+<pre><code>{
+  "model": "claude-opus-4-8",
+  "messages": [
+    { "role": "user", "content": "Start the migration workflow." },
+    {
+      "role": "system",
+      "content": "Budget update: stop spawning new subagents after 30 minutes. Prioritize tests."
+    },
+    { "role": "user", "content": "Continue with the updated budget." }
+  ]
+}</code></pre>
+
+    <h2>为什么 Opus 4.8 更适合长 workflow</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <h4>更长上下文</h4>
+        <p>1M context window 让它能容纳更长的 traces、文档和代码上下文，减少频繁截断。</p>
+      </div>
+      <div class="feature">
+        <h4>更好的 compaction 恢复</h4>
+        <p>官方文档明确提到长 agent traces 在 compaction 后更不容易偏离任务。</p>
+      </div>
+      <div class="feature">
+        <h4>更可靠的工具触发</h4>
+        <p>Opus 4.8 目标之一是减少“本该调用工具但跳过”的情况，这对代码任务很关键。</p>
+      </div>
+      <div class="feature">
+        <h4>更强的不确定性标记</h4>
+        <p>发布说明强调它更倾向于指出证据不足，而不是把薄弱结论包装成确定答案。</p>
+      </div>
+    </div>
+
+    <h2>什么时候开 Dynamic Workflow</h2>
+    <p>
+      官方也提醒 dynamic workflows 会消耗明显更多 usage。所以我的判断是：只有任务能并行、验证成本低于人工串行成本时才开。
+    </p>
+    <div class="card">
+      <table>
+        <tr><th>任务类型</th><th>是否适合</th><th>理由</th></tr>
+        <tr>
+          <td>全仓安全审计</td>
+          <td>适合</td>
+          <td>按目录、语言、风险模式分片，发现可独立验证。</td>
+        </tr>
+        <tr>
+          <td>大型迁移</td>
+          <td>适合</td>
+          <td>按 package / module 分片，最后用测试套件收敛。</td>
+        </tr>
+        <tr>
+          <td>单文件 bug 修复</td>
+          <td>不适合</td>
+          <td>启动和协调成本大于收益，普通 agent loop 更快。</td>
+        </tr>
+        <tr>
+          <td>高风险方案评审</td>
+          <td>适合</td>
+          <td>可以让多个代理独立提出方案，再让 adversarial reviewer 反驳。</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2>落地建议</h2>
+    <ul>
+      <li><strong>先收窄范围</strong>：第一次不要全仓跑，先选一个目录或一类问题看 token 消耗。</li>
+      <li><strong>验收标准写死</strong>：例如“现有测试必须通过”“不改 public API”“每个 finding 必须带文件行号和复现证据”。</li>
+      <li><strong>让验证代理独立</strong>：验证代理不应只复述 worker 的结论，应该拿 diff、测试和证据重新判断。</li>
+      <li><strong>把成本当成架构参数</strong>：<code>xhigh</code> 适合长周期 coding；普通分析可以从 <code>high</code> 或 <code>medium</code> 起步。</li>
+      <li><strong>把 workflow 产物版本化</strong>：计划、分片、finding、验证结果都落盘，失败后能恢复，而不是只留聊天记录。</li>
+    </ul>
+
+    <h2>一句话总结</h2>
+    <p>
+      Claude Opus 4.8 workflow 的本质，是把“一个聪明模型连续工作”升级为
+      <strong>“一个主控模型动态编排多个可验证的工作单元”</strong>。
+      模型能力提供推理和工具使用，workflow 架构提供并行、隔离、验证和恢复。
+      真正的生产价值，不在于一次回答多漂亮，而在于它能把几小时到几天的复杂工程任务稳定推进到可验收状态。
+    </p>
+
+    <h2>参考资料</h2>
+    <ul>
+      <li><a href="https://www.anthropic.com/news/claude-opus-4-8">Introducing Claude Opus 4.8</a>：发布说明、Dynamic Workflows、effort、API model ID 和价格信息。</li>
+      <li><a href="https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-8">What's new in Claude Opus 4.8</a>：模型规格、adaptive thinking、fast mode、prompt cache、迁移注意事项。</li>
+      <li><a href="https://claude.com/blog/introducing-dynamic-workflows-in-claude-code">Introducing dynamic workflows in Claude Code</a>：动态工作流的官方产品说明和使用场景。</li>
+      <li><a href="https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking">Adaptive thinking</a>：自适应思考模式说明。</li>
+      <li><a href="https://platform.claude.com/docs/en/build-with-claude/effort">Effort</a>：effort 参数如何影响输出、工具调用和 token 开销。</li>
+      <li><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-opus-4-8.html">Amazon Bedrock model card</a>：Bedrock 上的模型 ID、context window、max output tokens 和示例代码。</li>
+    </ul>
+
+    <footer>
+      <p>© 2026 shiyao · <a href="https://blog.shiyao.pro">blog.shiyao.pro</a> · 由 Claude Code 协助撰写</p>
+    </footer>
+
+  </div>
+  <script>
+    (() => {
+      const storageKey = "blog-shiyao-theme";
+      const themes = new Set(["paper", "ink", "signal", "studio"]);
+      const buttons = [...document.querySelectorAll("[data-theme-choice]")];
+      const setTheme = (theme) => {
+        const nextTheme = themes.has(theme) ? theme : "paper";
+        document.documentElement.dataset.theme = nextTheme;
+        try {
+          localStorage.setItem(storageKey, nextTheme);
+        } catch {}
+        buttons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.themeChoice === nextTheme));
+        });
+      };
+
+      let initialTheme = "paper";
+      try {
+        initialTheme = localStorage.getItem(storageKey) || "paper";
+      } catch {}
+      setTheme(initialTheme);
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setTheme(button.dataset.themeChoice));
+      });
+    })();
+  </script>
+</body>
+</html>
