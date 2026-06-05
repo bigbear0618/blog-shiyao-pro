@@ -63,6 +63,7 @@ jobs:
 
             echo "::group::Smoke test"
             curl -fsS -o /dev/null -w "Homepage: HTTP %{http_code}\n" https://blog.shiyao.pro/
+            curl -fsS -o /dev/null -w "AI daily: HTTP %{http_code}\n" https://blog.shiyao.pro/ai-daily
             curl -fsS -o /dev/null -w "Article  : HTTP %{http_code}\n" https://blog.shiyao.pro/happy-claude-247
             echo "::endgroup::"
 

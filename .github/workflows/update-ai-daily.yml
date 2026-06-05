@@ -1,0 +1,41 @@
+name: Update AI daily page
+
+on:
+  schedule:
+    # 10:00 Asia/Shanghai = 02:00 UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-ai-daily
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate AI daily page
+        run: python3 scripts/generate-ai-daily.py
+
+      - name: Commit changes
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- ai-daily.html; then
+            echo "No AI daily changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ai-daily.html
+          git commit -m "chore: update AI daily page"
+          git push

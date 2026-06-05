@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日 AI 趋势看板 · 2026-06-05 — blog.shiyao.pro</title>
+  <meta name="description" content="2026-06-05 今日 AI 资讯、GitHub AI 趋势榜、工具推荐和本地 Codex 生图工具。">
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --ink: #191917;
+      --muted: #6e6a60;
+      --panel: #fffdfa;
+      --line: #ded8cb;
+      --accent: #206b4f;
+      --accent-soft: #e4f2ea;
+      --gold: #b8872f;
+      color-scheme: light;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--accent); }
+
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 26px 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand { font-weight: 800; letter-spacing: 0; }
+    .brand span { color: var(--accent); }
+    .back { color: var(--muted); font-size: 0.92rem; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 42px;
+      padding: 58px 0 42px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 0.2rem 0.58rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 18px 0 16px;
+      font-size: clamp(2.25rem, 6vw, 5.1rem);
+      line-height: 0.96;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.06rem;
+    }
+
+    .stamp {
+      align-self: end;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .stamp strong { display: block; color: var(--accent); font-size: 2.4rem; line-height: 1; }
+    .stamp span { color: var(--muted); font-size: 0.9rem; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+      padding: 26px 0 46px;
+    }
+
+    .module {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .module.news { grid-column: span 7; }
+    .module.github { grid-column: span 5; }
+    .module.tools { grid-column: span 7; }
+    .module.image-tool { grid-column: span 5; }
+
+    .module-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 { margin: 0; font-size: 1.05rem; letter-spacing: 0; }
+    .module-head small { color: var(--muted); }
+
+    .rank-row {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 14px;
+      padding: 18px 20px;
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+    }
+
+    .rank-row:last-child { border-bottom: 0; }
+
+    .rank-index {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rank-row h3 { margin: 0 0 4px; font-size: 1rem; line-height: 1.34; }
+    .rank-row p { margin: 0 0 7px; color: var(--muted); font-size: 0.9rem; }
+    .mini { color: var(--gold); font-size: 0.78rem; font-weight: 700; }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 18px 20px 20px;
+    }
+
+    .tool-card {
+      min-height: 132px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbf8f0;
+    }
+
+    .tool-card h3 { margin: 0 0 6px; font-size: 1rem; }
+    .tool-card p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+    .image-panel { padding: 18px 20px 20px; }
+    label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 0.86rem; font-weight: 700; }
+
+    textarea,
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 132px;
+      resize: vertical;
+      padding: 12px;
+    }
+
+    input { height: 38px; padding: 0 11px; }
+
+    .field { margin-bottom: 12px; }
+
+    button {
+      width: 100%;
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.55; cursor: wait; }
+
+    .status {
+      min-height: 24px;
+      margin: 12px 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .preview {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: #fbf8f0;
+      color: var(--muted);
+      overflow: hidden;
+    }
+
+    .preview img { width: 100%; height: auto; display: block; }
+
+    .foot {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 920px) {
+      .hero { grid-template-columns: 1fr; }
+      .stamp { align-self: start; }
+      .module.news,
+      .module.github,
+      .module.tools,
+      .module.image-tool { grid-column: 1 / -1; }
+      .tool-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar" aria-label="站点导航">
+      <a class="brand" href="/">blog<span>.shiyao</span>.pro</a>
+      <a class="back" href="/">返回文章列表</a>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <span class="eyebrow">AI Daily · 10:00 CST</span>
+        <h1>今日 AI 趋势看板</h1>
+        <p class="lead">简洁版每日更新：AI 资讯、GitHub 趋势、工具推荐和本地 Codex 生图入口。页面由脚本自动生成，计划每天北京时间 10:00 更新。</p>
+      </div>
+      <aside class="stamp">
+        <strong>2026-06-05</strong>
+        <span>最后生成：2026-06-05 19:45 CST</span>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <section class="module news">
+        <div class="module-head">
+          <h2>今日 AI 资讯</h2>
+          <small>RSS + 官方来源</small>
+        </div>
+
+        <article class="rank-row">
+          <div class="rank-index">01</div>
+          <div>
+            <h3><a href="https://openai.com/index/endava-frontiers">How Endava is redesigning software delivery around AI agents</a></h3>
+            <p>Learn how Endava is using AI agents, ChatGPT Enterprise, and Codex to accelerate software delivery, automate workflows, and build an AI-native culture across the enterprise.</p>
+            <span class="mini">OpenAI · 06-04 20:00</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">02</div>
+          <div>
+            <h3><a href="https://openai.com/index/frontier-safety-blueprint">A blueprint for democratic governance of frontier AI</a></h3>
+            <p>OpenAI outlines a blueprint for U.S. governance of frontier AI, proposing a federal framework for safety, resilience, and national security.</p>
+            <span class="mini">OpenAI · 06-03 18:00</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">03</div>
+          <div>
+            <h3><a href="https://openai.com/index/public-policy-agenda">OpenAI public policy agenda</a></h3>
+            <p>OpenAI outlines its public policy agenda for AI, including safety, youth protection, workforce transition, and global standards to ensure AI benefits society.</p>
+            <span class="mini">OpenAI · 06-03 18:00</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">04</div>
+          <div>
+            <h3><a href="https://openai.com/index/wasmer">How Wasmer used Codex to build a Node.js runtime for the edge</a></h3>
+            <p>See how Wasmer used Codex with GPT-5.5 to build a Node.js runtime for the edge, accelerating development 10x to 20x and shipping in weeks instead of months.</p>
+            <span class="mini">OpenAI · 06-03 20:00</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">05</div>
+          <div>
+            <h3><a href="https://techcrunch.com/2026/06/04/apple-approves-poke-as-the-first-ai-agent-on-its-messages-for-business-platform/">Apple approves Poke as the first AI agent on its Messages for Business platform</a></h3>
+            <p>Poke, the startup that lets people use AI agents through simple text messages, has become the first AI agent approved for Apple’s Messages for Business platform.</p>
+            <span class="mini">TechCrunch AI · 06-05 03:20</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">06</div>
+          <div>
+            <h3><a href="https://www.theverge.com/ai-artificial-intelligence/942629/as-ai-gets-better-it-reveals-an-empty-promise">As AI gets better, it reveals an empty promise</a></h3>
+            <p>This week we&#x27;ve got tandem hands-ons with Google&#x27;s new Gemini AI agent - Spark - from my colleagues David Pierce and Jay Peters. Their takeaways are similar: It&#x27;s so effective that it&#x27;s scary. Spark knew that David&#x27;s dog is named Frida and knew the first name of Jay&#x27;s wife, even though neither of them explicitly […]</p>
+            <span class="mini">The Verge AI · 06-04 02:10</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="module github">
+        <div class="module-head">
+          <h2>今日 GitHub 趋势榜单</h2>
+          <small>daily trending / AI filter</small>
+        </div>
+
+        <article class="rank-row">
+          <div class="rank-index">01</div>
+          <div>
+            <h3><a href="https://github.com/NousResearch/hermes-agent">NousResearch/hermes-agent</a></h3>
+            <p>The agent that grows with you</p>
+            <span class="mini">Python / +1,913 stars today</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">02</div>
+          <div>
+            <h3><a href="https://github.com/chopratejas/headroom">chopratejas/headroom</a></h3>
+            <p>Compress tool outputs, logs, files, and RAG chunks before they reach the LLM. 60-95% fewer tokens, same answers. Library, proxy, MCP server.</p>
+            <span class="mini">Python / +3,142 stars today</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">03</div>
+          <div>
+            <h3><a href="https://github.com/CopilotKit/CopilotKit">CopilotKit/CopilotKit</a></h3>
+            <p>The Frontend Stack for Agents &amp; Generative UI. React + Angular. Makers of the AG-UI Protocol</p>
+            <span class="mini">TypeScript / +350 stars today</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">04</div>
+          <div>
+            <h3><a href="https://github.com/lfnovo/open-notebook">lfnovo/open-notebook</a></h3>
+            <p>An Open Source implementation of Notebook LM with more flexibility and features</p>
+            <span class="mini">TypeScript / +212 stars today</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">05</div>
+          <div>
+            <h3><a href="https://github.com/affaan-m/ECC">affaan-m/ECC</a></h3>
+            <p>The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond.</p>
+            <span class="mini">JavaScript / +1,750 stars today</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">06</div>
+          <div>
+            <h3><a href="https://github.com/Panniantong/Agent-Reach">Panniantong/Agent-Reach</a></h3>
+            <p>Give your AI agent eyes to see the entire internet. Read &amp; search Twitter, Reddit, YouTube, GitHub, Bilibili, XiaoHongShu — one CLI, zero API fees.</p>
+            <span class="mini">Python / +127 stars today</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">07</div>
+          <div>
+            <h3><a href="https://github.com/NVIDIA/cosmos">NVIDIA/cosmos</a></h3>
+            <p>NVIDIA Cosmos is an open platform of world models, datasets, and tools that enables developers to build Physical AI for robots, autonomous vehicles, smart infrastructure, and more.</p>
+            <span class="mini">Jupyter Notebook / +133 stars today</span>
+          </div>
+        </article>
+
+        <article class="rank-row">
+          <div class="rank-index">08</div>
+          <div>
+            <h3><a href="https://github.com/666ghj/MiroFish">666ghj/MiroFish</a></h3>
+            <p>A Simple and Universal Swarm Intelligence Engine, Predicting Anything. 简洁通用的群体智能引擎，预测万物</p>
+            <span class="mini">Python / +324 stars today</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="module tools">
+        <div class="module-head">
+          <h2>工具推荐</h2>
+          <small>今天适合研究的 workflow</small>
+        </div>
+        <div class="tool-grid">
+          <a class="tool-card" href="https://github.com/nexu-io/html-video">
+            <h3>html-video</h3>
+            <p>把文章、链接、Repo 交给 Agent，生成多帧 HTML 视频，再导出 MP4。</p>
+          </a>
+          <a class="tool-card" href="https://github.com/heygen-com/hyperframes">
+            <h3>HyperFrames</h3>
+            <p>HTML / CSS / GSAP 动效视频引擎，适合产品介绍和动态海报。</p>
+          </a>
+          <a class="tool-card" href="https://github.com/remotion-dev/skills">
+            <h3>Remotion Skills</h3>
+            <p>用 React 批量制作固定栏目、排行榜、字幕和数据视频。</p>
+          </a>
+          <a class="tool-card" href="https://github.com/dexhunter/seedance2-skill">
+            <h3>Seedance Prompt</h3>
+            <p>生成即梦 Seedance 2.0 分镜、运镜、对白和素材引用提示词。</p>
+          </a>
+        </div>
+      </section>
+
+      <section class="module image-tool">
+        <div class="module-head">
+          <h2>本地 Codex 生图工具</h2>
+          <small>需要启动 helper</small>
+        </div>
+        <div class="image-panel">
+          <div class="field">
+            <label for="imagePrompt">生图 Prompt</label>
+            <textarea id="imagePrompt" placeholder="例如：极简科技资讯封面，米白背景，绿色细线图形，中心是一枚发光的 AI 芯片， editorial poster style"></textarea>
+          </div>
+          <div class="field">
+            <label for="helperUrl">本地 helper 地址</label>
+            <input id="helperUrl" value="http://127.0.0.1:8787/generate-image">
+          </div>
+          <button id="generateBtn" type="button">生成图片</button>
+          <div class="status" id="imageStatus">先在本机运行：<code>python3 scripts/local-image-helper</code></div>
+          <div class="preview" id="imagePreview">生成后图片会显示在这里</div>
+        </div>
+      </section>
+    </section>
+
+    <footer class="foot">
+      数据源：OpenAI RSS、TechCrunch AI RSS、The Verge AI RSS、GitHub Trending daily。X/Twitter 话题暂不做自动抓取，后续可加入公开 topic 采集。页面生成脚本：<code>scripts/generate-ai-daily.py</code>。
+    </footer>
+  </main>
+
+  <script>
+    const btn = document.getElementById("generateBtn");
+    const statusEl = document.getElementById("imageStatus");
+    const preview = document.getElementById("imagePreview");
+    const promptEl = document.getElementById("imagePrompt");
+    const helperEl = document.getElementById("helperUrl");
+
+    btn.addEventListener("click", async () => {
+      const prompt = promptEl.value.trim();
+      if (!prompt) {
+        statusEl.textContent = "请先输入生图 prompt。";
+        return;
+      }
+
+      btn.disabled = true;
+      statusEl.textContent = "正在调用本地 Codex helper，可能需要几十秒到几分钟。";
+      preview.textContent = "生成中...";
+
+      try {
+        const response = await fetch(helperEl.value.trim(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || "生成失败");
+        }
+        const img = new Image();
+        img.alt = prompt;
+        img.src = data.image_url + "?t=" + Date.now();
+        preview.replaceChildren(img);
+        statusEl.textContent = "生成完成：" + (data.filename || "image");
+      } catch (err) {
+        statusEl.textContent = "生成失败：" + err.message + "。确认本地 helper 已启动，并且 Codex 有可用的生图能力。";
+        preview.textContent = "暂无图片";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -40,6 +40,29 @@ publish-blog ./foo.html --tag DevOps
 访问 https://blog.shiyao.pro/foo (得益于 try_files,无需 .html 后缀)
 ```
 
+## AI Daily 自动更新
+
+`ai-daily.html` 是稳定入口，每天北京时间 10:00 由 GitHub Actions 自动更新：
+
+```bash
+python3 scripts/generate-ai-daily.py
+```
+
+更新 workflow：`.github/workflows/update-ai-daily.yml`。它会抓取 OpenAI / TechCrunch / The Verge 的 AI RSS，以及 GitHub daily trending，生成新的 `ai-daily.html` 并提交回 `main`；随后现有 deploy workflow 自动同步到 nginx。
+
+本地生图面板需要先启动 helper：
+
+```bash
+python3 scripts/local-image-helper
+```
+
+默认 helper 会调用本机 `codex exec`，要求 Codex 把图片保存成 PNG。若本地 Codex 没有生图工具，可用 `AI_IMAGE_COMMAND` 接自己的生图 CLI：
+
+```bash
+AI_IMAGE_COMMAND='my-image-cli --prompt "{prompt}" --output "{output}"' \
+  python3 scripts/local-image-helper
+```
+
 ## 写一篇新文章
 
 1. 复制一个现有 HTML 当模板（比如 `happy-claude-247.html`）。
@@ -91,6 +114,7 @@ publish-blog <file.html> [选项]
 
 ## 文章列表
 
+- [今日 AI 趋势看板：资讯、GitHub 趋势与生图工具](ai-daily.html) — 每日 10:00 自动更新
 - [今日 AI 榜单：资讯、GitHub 趋势、X 推荐热门](ai-daily-rankings-2026-06-05.html) — 2026-06-05
 - [Claude Opus 4.8 Workflow 原理：动态工作流、架构图与代码逻辑](claude-opus-48-workflow.html) — 2026-06-05
 - [html-video 使用指南：Agent 写 HTML，本地导出 MP4](html-video-guide.html) — 2026-06-05

@@ -17,6 +17,9 @@ Thumbs.db
 node_modules/
 out/
 dist/
+.local-ai-images/
+__pycache__/
+*/__pycache__/
 
 # Sensitive — never commit
 *.pem
