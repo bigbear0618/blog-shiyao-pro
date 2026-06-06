@@ -580,11 +580,11 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
             <input id="helperUrl" value="/ai-image/generate-image">
           </div>
           <div class="field">
-            <label for="imageToken">访问 Token</label>
-            <input id="imageToken" type="password" placeholder="服务器部署时需要填写">
+            <label for="imageToken">访问 Token（必填）</label>
+            <input id="imageToken" type="password" autocomplete="off" placeholder="粘贴 .local-ai-images/image-token">
           </div>
           <button id="generateBtn" type="button">生成图片</button>
-          <div class="status" id="imageStatus">服务器已部署时使用同域地址；本机调试可改成 <code>http://127.0.0.1:8787/generate-image</code></div>
+          <div class="status" id="imageStatus">服务器已开启 token 保护；填写一次后会保存在当前浏览器。本机调试可改成 <code>http://127.0.0.1:8787/generate-image</code></div>
           <div class="preview" id="imagePreview">生成后图片会显示在这里</div>
         </div>
       </section>
@@ -602,6 +602,19 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
     const promptEl = document.getElementById("imagePrompt");
     const helperEl = document.getElementById("helperUrl");
     const tokenEl = document.getElementById("imageToken");
+    const TOKEN_KEY = "aiDailyImageToken";
+
+    try {{
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const hashToken = hash.get("token");
+      if (hashToken) {{
+        localStorage.setItem(TOKEN_KEY, hashToken);
+        tokenEl.value = hashToken;
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }} else {{
+        tokenEl.value = localStorage.getItem(TOKEN_KEY) || "";
+      }}
+    }} catch (err) {{}}
 
     btn.addEventListener("click", async () => {{
       const prompt = promptEl.value.trim();
@@ -609,23 +622,34 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
         statusEl.textContent = "请先输入生图 prompt。";
         return;
       }}
+      const token = tokenEl.value.trim();
+      if (!token) {{
+        statusEl.textContent = "请先填写访问 Token。服务器上的生图接口已开启 token 保护。";
+        tokenEl.focus();
+        return;
+      }}
+      localStorage.setItem(TOKEN_KEY, token);
 
       btn.disabled = true;
       statusEl.textContent = "正在调用本地 Codex helper，可能需要几十秒到几分钟。";
       preview.textContent = "生成中...";
 
       try {{
-        const token = tokenEl.value.trim();
-        const payload = {{ prompt }};
-        if (token) payload.token = token;
         const response = await fetch(helperEl.value.trim(), {{
           method: "POST",
           headers: {{ "Content-Type": "application/json" }},
-          body: JSON.stringify(payload)
+          body: JSON.stringify({{ prompt, token }})
         }});
-        const data = await response.json();
+        const text = await response.text();
+        let data = {{}};
+        try {{
+          data = JSON.parse(text);
+        }} catch (err) {{}}
         if (!response.ok || !data.ok) {{
-          throw new Error(data.error || "生成失败");
+          if (response.status === 401) {{
+            throw new Error("Token 不正确或未填写");
+          }}
+          throw new Error(data.error || text || "生成失败");
         }}
         const img = new Image();
         img.alt = prompt;
@@ -633,7 +657,7 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
         preview.replaceChildren(img);
         statusEl.textContent = "生成完成：" + (data.filename || "image");
       }} catch (err) {{
-        statusEl.textContent = "生成失败：" + err.message + "。确认本地 helper 已启动，并且 Codex 有可用的生图能力。";
+        statusEl.textContent = "生成失败：" + err.message + "。如果长时间无响应，检查 helper 日志或稍后重试。";
         preview.textContent = "暂无图片";
       }} finally {{
         btn.disabled = false;
