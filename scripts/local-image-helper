@@ -63,8 +63,6 @@ Requirements:
         str(ROOT),
         "--sandbox",
         "danger-full-access",
-        "--ask-for-approval",
-        "never",
         codex_prompt,
     ]
     return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True, timeout=TIMEOUT)
