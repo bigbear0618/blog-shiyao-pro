@@ -74,7 +74,7 @@ class Handler(BaseHTTPRequestHandler):
     def end_headers(self) -> None:
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Image-Token")
         super().end_headers()
 
     def do_OPTIONS(self) -> None:
@@ -108,9 +108,6 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path != "/generate-image":
             self.json(404, {"ok": False, "error": "not found"})
             return
-        if not self.authorized(parsed):
-            self.json(401, {"ok": False, "error": "unauthorized"})
-            return
         length = int(self.headers.get("Content-Length", "0"))
         if length > 20000:
             self.json(413, {"ok": False, "error": "prompt too large"})
@@ -119,6 +116,9 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
         except Exception:
             self.json(400, {"ok": False, "error": "invalid json"})
+            return
+        if not self.authorized(parsed, payload):
+            self.json(401, {"ok": False, "error": "unauthorized"})
             return
         prompt = str(payload.get("prompt", "")).strip()
         if not prompt:
@@ -152,11 +152,14 @@ class Handler(BaseHTTPRequestHandler):
             "image_url": image_url(filename),
         })
 
-    def authorized(self, parsed: urllib.parse.ParseResult) -> bool:
+    def authorized(self, parsed: urllib.parse.ParseResult, payload: dict | None = None) -> bool:
         if not TOKEN:
             return True
         query = urllib.parse.parse_qs(parsed.query)
-        supplied = self.headers.get("X-Image-Token", "") or (query.get("token", [""])[0])
+        body_token = ""
+        if payload:
+            body_token = str(payload.get("token", "")).strip()
+        supplied = body_token or self.headers.get("X-Image-Token", "") or (query.get("token", [""])[0])
         return supplied == TOKEN
 
     def json(self, status: int, payload: dict) -> None:

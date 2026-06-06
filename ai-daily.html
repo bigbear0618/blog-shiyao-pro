@@ -257,7 +257,7 @@
       </div>
       <aside class="stamp">
         <strong>2026-06-06</strong>
-        <span>最后生成：2026-06-06 07:37 CST</span>
+        <span>最后生成：2026-06-06 08:21 CST</span>
       </aside>
     </section>
 
@@ -334,7 +334,7 @@
           <div>
             <h3><a href="https://github.com/NousResearch/hermes-agent">NousResearch/hermes-agent</a></h3>
             <p>The agent that grows with you</p>
-            <span class="mini">Python / +1,821 stars today</span>
+            <span class="mini">Python / +1,845 stars today</span>
           </div>
         </article>
 
@@ -343,7 +343,7 @@
           <div>
             <h3><a href="https://github.com/chopratejas/headroom">chopratejas/headroom</a></h3>
             <p>Compress tool outputs, logs, files, and RAG chunks before they reach the LLM. 60-95% fewer tokens, same answers. Library, proxy, MCP server.</p>
-            <span class="mini">Python / +2,503 stars today</span>
+            <span class="mini">Python / +2,473 stars today</span>
           </div>
         </article>
 
@@ -352,7 +352,7 @@
           <div>
             <h3><a href="https://github.com/CopilotKit/CopilotKit">CopilotKit/CopilotKit</a></h3>
             <p>The Frontend Stack for Agents &amp; Generative UI. React + Angular. Makers of the AG-UI Protocol</p>
-            <span class="mini">TypeScript / +350 stars today</span>
+            <span class="mini">TypeScript / +366 stars today</span>
           </div>
         </article>
 
@@ -361,7 +361,7 @@
           <div>
             <h3><a href="https://github.com/lfnovo/open-notebook">lfnovo/open-notebook</a></h3>
             <p>An Open Source implementation of Notebook LM with more flexibility and features</p>
-            <span class="mini">TypeScript / +1,142 stars today</span>
+            <span class="mini">TypeScript / +1,152 stars today</span>
           </div>
         </article>
 
@@ -370,7 +370,7 @@
           <div>
             <h3><a href="https://github.com/affaan-m/ECC">affaan-m/ECC</a></h3>
             <p>The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond.</p>
-            <span class="mini">JavaScript / +1,368 stars today</span>
+            <span class="mini">JavaScript / +1,361 stars today</span>
           </div>
         </article>
 
@@ -379,7 +379,7 @@
           <div>
             <h3><a href="https://github.com/Panniantong/Agent-Reach">Panniantong/Agent-Reach</a></h3>
             <p>Give your AI agent eyes to see the entire internet. Read &amp; search Twitter, Reddit, YouTube, GitHub, Bilibili, XiaoHongShu — one CLI, zero API fees.</p>
-            <span class="mini">Python / +127 stars today</span>
+            <span class="mini">Python / +148 stars today</span>
           </div>
         </article>
 
@@ -388,7 +388,7 @@
           <div>
             <h3><a href="https://github.com/NVIDIA/cosmos">NVIDIA/cosmos</a></h3>
             <p>NVIDIA Cosmos is an open platform of world models, datasets, and tools that enables developers to build Physical AI for robots, autonomous vehicles, smart infrastructure, and more.</p>
-            <span class="mini">Jupyter Notebook / +494 stars today</span>
+            <span class="mini">Jupyter Notebook / +479 stars today</span>
           </div>
         </article>
 
@@ -397,7 +397,7 @@
           <div>
             <h3><a href="https://github.com/666ghj/MiroFish">666ghj/MiroFish</a></h3>
             <p>A Simple and Universal Swarm Intelligence Engine, Predicting Anything. 简洁通用的群体智能引擎，预测万物</p>
-            <span class="mini">Python / +324 stars today</span>
+            <span class="mini">Python / +320 stars today</span>
           </div>
         </article>
       </section>
@@ -477,15 +477,13 @@
       preview.textContent = "生成中...";
 
       try {
-        const headers = { "Content-Type": "application/json" };
         const token = tokenEl.value.trim();
-        if (token) {
-          headers["X-Image-Token"] = token;
-        }
+        const payload = { prompt };
+        if (token) payload.token = token;
         const response = await fetch(helperEl.value.trim(), {
           method: "POST",
-          headers,
-          body: JSON.stringify({ prompt })
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
         const data = await response.json();
         if (!response.ok || !data.ok) {

@@ -615,15 +615,13 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
       preview.textContent = "生成中...";
 
       try {{
-        const headers = {{ "Content-Type": "application/json" }};
         const token = tokenEl.value.trim();
-        if (token) {{
-          headers["X-Image-Token"] = token;
-        }}
+        const payload = {{ prompt }};
+        if (token) payload.token = token;
         const response = await fetch(helperEl.value.trim(), {{
           method: "POST",
-          headers,
-          body: JSON.stringify({{ prompt }})
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify(payload)
         }});
         const data = await response.json();
         if (!response.ok || !data.ok) {{
