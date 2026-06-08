@@ -45,6 +45,7 @@ class TrendItem:
     heat: str
     signal: str
     impact: str
+    sources: list[tuple[str, str]]
 
 
 TODAY_TRENDS = [
@@ -53,36 +54,60 @@ TODAY_TRENDS = [
         "高",
         "WWDC26 将于美国太平洋时间 6 月 8 日 10:00 开场，也就是中国时间 6 月 9 日 01:00。市场重点看 Apple Intelligence、Siri 和系统级 AI 能力。",
         "如果 Apple 强调端侧 AI、隐私和跨 App 操作，会推动手机 OS 级 AI 助手重新升温。",
+        [
+            ("Apple Newsroom", "https://www.apple.com/newsroom/2026/05/apple-kicks-off-worldwide-developers-conference-on-june-8/"),
+        ],
     ),
     TrendItem(
         "企业级 Agent",
         "很高",
         "Microsoft Build 2026 集中发布 Foundry IQ、Agent Control Specification、ASSERT、Agent Optimizer 等企业 Agent 能力。",
         "Agent 正从演示工具进入企业部署阶段，关键词是治理、记忆、权限、评估和可观测性。",
+        [
+            ("Microsoft Foundry", "https://devblogs.microsoft.com/foundry/whats-new-in-microsoft-foundry-build-2026/"),
+            ("Agent Trust Stack", "https://devblogs.microsoft.com/foundry/build-2026-open-trust-stack-ai-agents/"),
+        ],
     ),
     TrendItem(
         "OpenAI 产品趋势",
         "高",
         "ChatGPT 近期升级记忆系统；GPT-5.5 Instant 继续强化默认体验、准确性和个性化上下文。",
         "通用助手竞争点从更强模型转向更懂用户、更少幻觉、更能持续工作。",
+        [
+            ("GPT-5.5", "https://openai.com/index/introducing-gpt-5-5/"),
+            ("ChatGPT Release Notes", "https://help.openai.com/en/articles/6825453-chatgpt-release-notes"),
+        ],
     ),
     TrendItem(
         "AI 基础设施",
         "高",
         "NVIDIA 推进 Vera Rubin、Isaac GR00T Reference Humanoid Robot、Physical AI 数据与模型平台。",
         "算力叙事从训练大模型扩展到推理、机器人、长任务和多 Agent 并发。",
+        [
+            ("Isaac GR00T Robot", "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-NVIDIA-Isaac-GR00T-Reference-Humanoid-Robot-for-Academic-Research/default.aspx"),
+            ("Physical AI", "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-and-Global-Robotics-Leaders-Take-Physical-AI-to-the-Real-World/"),
+        ],
     ),
     TrendItem(
         "AI 安全与监管",
         "中高",
         "美国 AI/网络安全行政令趋于收窄；行业继续关注 Agent 滥用、网络攻击和关键基础设施风险。",
         "企业落地 Agent 时，权限、身份、审计、红队测试会成为采购门槛。",
+        [
+            ("White House EO", "https://www.whitehouse.gov/presidential-actions/2026/06/promoting-advanced-artificial-intelligence-innovation-and-security/"),
+            ("Fact Sheet", "https://www.whitehouse.gov/fact-sheets/2026/06/fact-sheet-president-donald-j-trump-promotes-advanced-artificial-intelligence-innovation-and-security/"),
+        ],
     ),
     TrendItem(
         "企业 ROI",
         "中高",
         "Stanford AI Index、Deloitte、McKinsey 等报告显示 AI 采用很快，但治理成熟度和可量化收益仍滞后。",
         "2026 年不是谁用了 AI，而是谁能把 AI 变成可计量收益。",
+        [
+            ("Stanford AI Index", "https://hai.stanford.edu/ai-index"),
+            ("Deloitte State of AI", "https://www.deloitte.com/us/en/what-we-do/capabilities/applied-artificial-intelligence/content/state-of-ai-in-the-enterprise.html"),
+            ("McKinsey AI Trust", "https://www.mckinsey.com/capabilities/tech-and-ai/our-insights/tech-forward/state-of-ai-trust-in-2026-shifting-to-the-agentic-era"),
+        ],
     ),
 ]
 
@@ -307,6 +332,10 @@ def render_rank_items_repos(items: list[RepoItem]) -> str:
 def render_trend_items(items: list[TrendItem]) -> str:
     rows = []
     for item in items:
+        links = " ".join(
+            f'<a href="{escape(url)}" target="_blank" rel="noopener noreferrer">{escape(label)}</a>'
+            for label, url in item.sources
+        )
         rows.append(f"""
           <article class="trend-row">
             <div>
@@ -315,6 +344,7 @@ def render_trend_items(items: list[TrendItem]) -> str:
             </div>
             <p>{escape(item.signal)}</p>
             <p>{escape(item.impact)}</p>
+            <p class="sources">来源：{links}</p>
           </article>""")
     return "\n".join(rows)
 
@@ -508,6 +538,28 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
       margin: 0 0 10px;
       color: var(--muted);
       font-size: 0.9rem;
+    }}
+
+    .trend-row .sources {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }}
+
+    .trend-row .sources a {{
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0.1rem 0.5rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fbf8f0;
+      color: var(--accent);
+      font-weight: 800;
     }}
 
     .heat {{
