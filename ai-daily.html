@@ -15,6 +15,8 @@
       --accent: #206b4f;
       --accent-soft: #e4f2ea;
       --gold: #b8872f;
+      --blue: #3157d5;
+      --red: #b42318;
       color-scheme: light;
     }
 
@@ -108,6 +110,7 @@
 
     .module.news { grid-column: span 7; }
     .module.github { grid-column: span 5; }
+    .module.focus { grid-column: 1 / -1; }
     .module.tools { grid-column: span 7; }
     .module.image-tool { grid-column: span 5; }
 
@@ -148,6 +151,79 @@
     .rank-row h3 { margin: 0 0 4px; font-size: 1rem; line-height: 1.34; }
     .rank-row p { margin: 0 0 7px; color: var(--muted); font-size: 0.9rem; }
     .mini { color: var(--gold); font-size: 0.78rem; font-weight: 700; }
+
+    .trend-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .trend-row {
+      min-height: 214px;
+      padding: 18px 18px 16px;
+      background: var(--panel);
+    }
+
+    .trend-row div {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .trend-row h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.32;
+    }
+
+    .trend-row p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .heat {
+      flex: 0 0 auto;
+      padding: 0.08rem 0.48rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--red) 10%, var(--panel));
+      color: var(--red);
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .signal-list {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      padding: 18px 20px 20px;
+      border-top: 1px solid var(--line);
+      background: #fbf8f0;
+    }
+
+    .signal-item {
+      min-height: 116px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .signal-item strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--blue);
+      font-size: 0.92rem;
+    }
+
+    .signal-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
 
     .tool-grid {
       display: grid;
@@ -236,8 +312,11 @@
       .stamp { align-self: start; }
       .module.news,
       .module.github,
+      .module.focus,
       .module.tools,
       .module.image-tool { grid-column: 1 / -1; }
+      .trend-grid,
+      .signal-list { grid-template-columns: 1fr; }
       .tool-grid { grid-template-columns: 1fr; }
     }
   </style>
@@ -253,15 +332,96 @@
       <div>
         <span class="eyebrow">AI Daily · 10:00 CST</span>
         <h1>今日 AI 趋势看板</h1>
-        <p class="lead">简洁版每日更新：AI 资讯、GitHub 趋势、工具推荐和本地 Codex 生图入口。页面由脚本自动生成，计划每天北京时间 10:00 更新。</p>
+        <p class="lead">简洁版每日更新：今日主线、AI 资讯、GitHub 趋势、工具推荐和本地 Codex 生图入口。页面由脚本自动生成，计划每天北京时间 10:00 更新。</p>
       </div>
       <aside class="stamp">
         <strong>2026-06-08</strong>
-        <span>最后生成：2026-06-08 14:49 CST</span>
+        <span>最后生成：2026-06-08 15:36 CST</span>
       </aside>
     </section>
 
     <section class="grid">
+      <section class="module focus">
+        <div class="module-head">
+          <h2>今日趋势总览</h2>
+          <small>2026-06-08 / 中文速读</small>
+        </div>
+        <div class="trend-grid">
+
+          <article class="trend-row">
+            <div>
+              <h3>Apple AI / Siri</h3>
+              <span class="heat">高</span>
+            </div>
+            <p>WWDC26 将于美国太平洋时间 6 月 8 日 10:00 开场，也就是中国时间 6 月 9 日 01:00。市场重点看 Apple Intelligence、Siri 和系统级 AI 能力。</p>
+            <p>如果 Apple 强调端侧 AI、隐私和跨 App 操作，会推动手机 OS 级 AI 助手重新升温。</p>
+          </article>
+
+          <article class="trend-row">
+            <div>
+              <h3>企业级 Agent</h3>
+              <span class="heat">很高</span>
+            </div>
+            <p>Microsoft Build 2026 集中发布 Foundry IQ、Agent Control Specification、ASSERT、Agent Optimizer 等企业 Agent 能力。</p>
+            <p>Agent 正从演示工具进入企业部署阶段，关键词是治理、记忆、权限、评估和可观测性。</p>
+          </article>
+
+          <article class="trend-row">
+            <div>
+              <h3>OpenAI 产品趋势</h3>
+              <span class="heat">高</span>
+            </div>
+            <p>ChatGPT 近期升级记忆系统；GPT-5.5 Instant 继续强化默认体验、准确性和个性化上下文。</p>
+            <p>通用助手竞争点从更强模型转向更懂用户、更少幻觉、更能持续工作。</p>
+          </article>
+
+          <article class="trend-row">
+            <div>
+              <h3>AI 基础设施</h3>
+              <span class="heat">高</span>
+            </div>
+            <p>NVIDIA 推进 Vera Rubin、Isaac GR00T Reference Humanoid Robot、Physical AI 数据与模型平台。</p>
+            <p>算力叙事从训练大模型扩展到推理、机器人、长任务和多 Agent 并发。</p>
+          </article>
+
+          <article class="trend-row">
+            <div>
+              <h3>AI 安全与监管</h3>
+              <span class="heat">中高</span>
+            </div>
+            <p>美国 AI/网络安全行政令趋于收窄；行业继续关注 Agent 滥用、网络攻击和关键基础设施风险。</p>
+            <p>企业落地 Agent 时，权限、身份、审计、红队测试会成为采购门槛。</p>
+          </article>
+
+          <article class="trend-row">
+            <div>
+              <h3>企业 ROI</h3>
+              <span class="heat">中高</span>
+            </div>
+            <p>Stanford AI Index、Deloitte、McKinsey 等报告显示 AI 采用很快，但治理成熟度和可量化收益仍滞后。</p>
+            <p>2026 年不是谁用了 AI，而是谁能把 AI 变成可计量收益。</p>
+          </article>
+        </div>
+        <div class="signal-list">
+          <div class="signal-item">
+            <strong>今日主线</strong>
+            <span>Apple 是今天最大变量；企业 Agent 进入工程化阶段；记忆成为助手核心能力；Physical AI 持续升温。</span>
+          </div>
+          <div class="signal-item">
+            <strong>今晚看点</strong>
+            <span>WWDC26 重点看 Siri 是否能展示跨应用任务、端侧上下文和 Apple Intelligence 的开发者入口。</span>
+          </div>
+          <div class="signal-item">
+            <strong>企业看点</strong>
+            <span>Microsoft Foundry、Agent Control Specification、ASSERT 和 Copilot 生态正在定义 Agent 采购门槛。</span>
+          </div>
+          <div class="signal-item">
+            <strong>产业看点</strong>
+            <span>NVIDIA 的推理平台、机器人参考设计和 Physical AI 数据管线继续支撑 AI 基础设施叙事。</span>
+          </div>
+        </div>
+      </section>
+
       <section class="module news">
         <div class="module-head">
           <h2>今日 AI 资讯</h2>
@@ -453,7 +613,7 @@
     </section>
 
     <footer class="foot">
-      数据源：OpenAI RSS、TechCrunch AI RSS、The Verge AI RSS、GitHub Trending daily。X/Twitter 话题暂不做自动抓取，后续可加入公开 topic 采集。页面生成脚本：<code>scripts/generate-ai-daily.py</code>。
+      数据源：OpenAI RSS、TechCrunch AI RSS、The Verge AI RSS、GitHub Trending daily，以及 Apple Newsroom、Microsoft Foundry Blog、OpenAI Help Center、NVIDIA Newsroom/Investor Relations、Stanford AI Index、Deloitte、McKinsey 等人工核对来源。X/Twitter 话题暂不做自动抓取，后续可加入公开 topic 采集。页面生成脚本：<code>scripts/generate-ai-daily.py</code>。
     </footer>
   </main>
 

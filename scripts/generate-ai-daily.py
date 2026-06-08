@@ -39,6 +39,54 @@ class RepoItem:
     desc: str
 
 
+@dataclass
+class TrendItem:
+    topic: str
+    heat: str
+    signal: str
+    impact: str
+
+
+TODAY_TRENDS = [
+    TrendItem(
+        "Apple AI / Siri",
+        "高",
+        "WWDC26 将于美国太平洋时间 6 月 8 日 10:00 开场，也就是中国时间 6 月 9 日 01:00。市场重点看 Apple Intelligence、Siri 和系统级 AI 能力。",
+        "如果 Apple 强调端侧 AI、隐私和跨 App 操作，会推动手机 OS 级 AI 助手重新升温。",
+    ),
+    TrendItem(
+        "企业级 Agent",
+        "很高",
+        "Microsoft Build 2026 集中发布 Foundry IQ、Agent Control Specification、ASSERT、Agent Optimizer 等企业 Agent 能力。",
+        "Agent 正从演示工具进入企业部署阶段，关键词是治理、记忆、权限、评估和可观测性。",
+    ),
+    TrendItem(
+        "OpenAI 产品趋势",
+        "高",
+        "ChatGPT 近期升级记忆系统；GPT-5.5 Instant 继续强化默认体验、准确性和个性化上下文。",
+        "通用助手竞争点从更强模型转向更懂用户、更少幻觉、更能持续工作。",
+    ),
+    TrendItem(
+        "AI 基础设施",
+        "高",
+        "NVIDIA 推进 Vera Rubin、Isaac GR00T Reference Humanoid Robot、Physical AI 数据与模型平台。",
+        "算力叙事从训练大模型扩展到推理、机器人、长任务和多 Agent 并发。",
+    ),
+    TrendItem(
+        "AI 安全与监管",
+        "中高",
+        "美国 AI/网络安全行政令趋于收窄；行业继续关注 Agent 滥用、网络攻击和关键基础设施风险。",
+        "企业落地 Agent 时，权限、身份、审计、红队测试会成为采购门槛。",
+    ),
+    TrendItem(
+        "企业 ROI",
+        "中高",
+        "Stanford AI Index、Deloitte、McKinsey 等报告显示 AI 采用很快，但治理成熟度和可量化收益仍滞后。",
+        "2026 年不是谁用了 AI，而是谁能把 AI 变成可计量收益。",
+    ),
+]
+
+
 def fetch(url: str, timeout: int = 15) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*"})
     with urllib.request.urlopen(req, timeout=timeout) as res:
@@ -256,6 +304,21 @@ def render_rank_items_repos(items: list[RepoItem]) -> str:
     return "\n".join(rows)
 
 
+def render_trend_items(items: list[TrendItem]) -> str:
+    rows = []
+    for item in items:
+        rows.append(f"""
+          <article class="trend-row">
+            <div>
+              <h3>{escape(item.topic)}</h3>
+              <span class="heat">{escape(item.heat)}</span>
+            </div>
+            <p>{escape(item.signal)}</p>
+            <p>{escape(item.impact)}</p>
+          </article>""")
+    return "\n".join(rows)
+
+
 def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
     now = datetime.now(CN_TZ)
     today = now.strftime("%Y-%m-%d")
@@ -277,6 +340,8 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
       --accent: #206b4f;
       --accent-soft: #e4f2ea;
       --gold: #b8872f;
+      --blue: #3157d5;
+      --red: #b42318;
       color-scheme: light;
     }}
 
@@ -370,6 +435,7 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
 
     .module.news {{ grid-column: span 7; }}
     .module.github {{ grid-column: span 5; }}
+    .module.focus {{ grid-column: 1 / -1; }}
     .module.tools {{ grid-column: span 7; }}
     .module.image-tool {{ grid-column: span 5; }}
 
@@ -410,6 +476,79 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
     .rank-row h3 {{ margin: 0 0 4px; font-size: 1rem; line-height: 1.34; }}
     .rank-row p {{ margin: 0 0 7px; color: var(--muted); font-size: 0.9rem; }}
     .mini {{ color: var(--gold); font-size: 0.78rem; font-weight: 700; }}
+
+    .trend-grid {{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+    }}
+
+    .trend-row {{
+      min-height: 214px;
+      padding: 18px 18px 16px;
+      background: var(--panel);
+    }}
+
+    .trend-row div {{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }}
+
+    .trend-row h3 {{
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.32;
+    }}
+
+    .trend-row p {{
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }}
+
+    .heat {{
+      flex: 0 0 auto;
+      padding: 0.08rem 0.48rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--red) 10%, var(--panel));
+      color: var(--red);
+      font-size: 0.76rem;
+      font-weight: 900;
+    }}
+
+    .signal-list {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      padding: 18px 20px 20px;
+      border-top: 1px solid var(--line);
+      background: #fbf8f0;
+    }}
+
+    .signal-item {{
+      min-height: 116px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }}
+
+    .signal-item strong {{
+      display: block;
+      margin-bottom: 6px;
+      color: var(--blue);
+      font-size: 0.92rem;
+    }}
+
+    .signal-item span {{
+      display: block;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }}
 
     .tool-grid {{
       display: grid;
@@ -498,8 +637,11 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
       .stamp {{ align-self: start; }}
       .module.news,
       .module.github,
+      .module.focus,
       .module.tools,
       .module.image-tool {{ grid-column: 1 / -1; }}
+      .trend-grid,
+      .signal-list {{ grid-template-columns: 1fr; }}
       .tool-grid {{ grid-template-columns: 1fr; }}
     }}
   </style>
@@ -515,7 +657,7 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
       <div>
         <span class="eyebrow">AI Daily · 10:00 CST</span>
         <h1>今日 AI 趋势看板</h1>
-        <p class="lead">简洁版每日更新：AI 资讯、GitHub 趋势、工具推荐和本地 Codex 生图入口。页面由脚本自动生成，计划每天北京时间 10:00 更新。</p>
+        <p class="lead">简洁版每日更新：今日主线、AI 资讯、GitHub 趋势、工具推荐和本地 Codex 生图入口。页面由脚本自动生成，计划每天北京时间 10:00 更新。</p>
       </div>
       <aside class="stamp">
         <strong>{today}</strong>
@@ -524,6 +666,34 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
     </section>
 
     <section class="grid">
+      <section class="module focus">
+        <div class="module-head">
+          <h2>今日趋势总览</h2>
+          <small>2026-06-08 / 中文速读</small>
+        </div>
+        <div class="trend-grid">
+{render_trend_items(TODAY_TRENDS)}
+        </div>
+        <div class="signal-list">
+          <div class="signal-item">
+            <strong>今日主线</strong>
+            <span>Apple 是今天最大变量；企业 Agent 进入工程化阶段；记忆成为助手核心能力；Physical AI 持续升温。</span>
+          </div>
+          <div class="signal-item">
+            <strong>今晚看点</strong>
+            <span>WWDC26 重点看 Siri 是否能展示跨应用任务、端侧上下文和 Apple Intelligence 的开发者入口。</span>
+          </div>
+          <div class="signal-item">
+            <strong>企业看点</strong>
+            <span>Microsoft Foundry、Agent Control Specification、ASSERT 和 Copilot 生态正在定义 Agent 采购门槛。</span>
+          </div>
+          <div class="signal-item">
+            <strong>产业看点</strong>
+            <span>NVIDIA 的推理平台、机器人参考设计和 Physical AI 数据管线继续支撑 AI 基础设施叙事。</span>
+          </div>
+        </div>
+      </section>
+
       <section class="module news">
         <div class="module-head">
           <h2>今日 AI 资讯</h2>
@@ -591,7 +761,7 @@ def render_page(news: list[NewsItem], repos: list[RepoItem]) -> str:
     </section>
 
     <footer class="foot">
-      数据源：OpenAI RSS、TechCrunch AI RSS、The Verge AI RSS、GitHub Trending daily。X/Twitter 话题暂不做自动抓取，后续可加入公开 topic 采集。页面生成脚本：<code>scripts/generate-ai-daily.py</code>。
+      数据源：OpenAI RSS、TechCrunch AI RSS、The Verge AI RSS、GitHub Trending daily，以及 Apple Newsroom、Microsoft Foundry Blog、OpenAI Help Center、NVIDIA Newsroom/Investor Relations、Stanford AI Index、Deloitte、McKinsey 等人工核对来源。X/Twitter 话题暂不做自动抓取，后续可加入公开 topic 采集。页面生成脚本：<code>scripts/generate-ai-daily.py</code>。
     </footer>
   </main>
 
