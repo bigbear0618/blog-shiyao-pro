@@ -120,6 +120,7 @@ publish-blog <file.html> [选项]
 
 ## 文章列表
 
+- [AI 脱口秀段子合集：每条 40 秒内](ai-standup-bits-40s.html) — 2026-06-16
 - [今日 AI 趋势看板：资讯、GitHub 趋势与生图工具](ai-daily.html) — 每日 10:00 自动更新
 - [今日 AI 榜单：资讯、GitHub 趋势、X 推荐热门](ai-daily-rankings-2026-06-05.html) — 2026-06-05
 - [Claude Opus 4.8 Workflow 原理：动态工作流、架构图与代码逻辑](claude-opus-48-workflow.html) — 2026-06-05
